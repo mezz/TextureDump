@@ -10,12 +10,12 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "1.0"
-group= "net.minecraftforge.debug.texturedump" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "mezz.texturedump"
 archivesBaseName = "texturedump_" + mcversion
 
-sourceCompatibility = targetCompatibility = "1.6" // Need this here so eclipse task generates correctly.
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8 // Need this here so eclipse task generates correctly.
 compileJava {
-    sourceCompatibility = targetCompatibility = "1.6"
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 minecraft {
