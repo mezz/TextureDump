@@ -7,10 +7,7 @@
         var lastCell;
 
         var nameElement;
-        var widthElement;
-        var heightElement;
-        var xElement;
-        var yElement;
+        var sizeElement;
         var markerElement;
         var imageElement;
         var sourceImageElement;
@@ -67,10 +64,7 @@
             }
 
             nameElement = document.getElementById("name");
-            widthElement = document.getElementById("width");
-            heightElement = document.getElementById("height");
-            xElement = document.getElementById("x");
-            yElement = document.getElementById("y");
+            sizeElement = document.getElementById("size");
             markerElement = document.getElementById("marker");
             imageElement = document.getElementById("singleImage");
             sourceImageElement = document.getElementById("sheet");
@@ -114,10 +108,7 @@
                     var data = imageData[imageDataIndex];
 
                     nameElement.innerText = data.name;
-                    widthElement.innerText = data.width;
-                    heightElement.innerText = data.height;
-                    xElement.innerText = data.x;
-                    yElement.innerText = data.y;
+                    sizeElement.innerText = data.width + " x " + data.height;
 
                     markerElement.style.top = data.y + target.offsetTop;
                     markerElement.style.left = data.x + target.offsetLeft;
@@ -134,10 +125,7 @@
             } else {
                 ctx.clearRect(0, 0, imageElement.width, imageElement.height);
                 nameElement.innerText = "";
-                widthElement.innerText = "";
-                heightElement.innerText = "";
-                xElement.innerText = "";
-                yElement.innerText = "";
+                sizeElement.innerText = "";
                 markerElement.style.display = "none";
             }
         }
@@ -210,7 +198,7 @@
 </head>
 <body>
 <div class="header">
-    <h1>Texture Sheet</h1>
+    <h1><a href="https://github.com/mezz/TextureDump">Texture Dump</a></h1>
 </div>
 
 <div id="sheetContainer">
@@ -222,14 +210,8 @@
     <div></div>
     <div class="fieldHeader">Name: </div>
     <div id="name" class="field"></div>
-    <div class="fieldHeader">Width: </div>
-    <div id="width" class="field"></div>
-    <div class="fieldHeader">Height: </div>
-    <div id="height" class="field"></div>
-    <div class="fieldHeader">X: </div>
-    <div id="x" class="field"></div>
-    <div class="fieldHeader">Y: </div>
-    <div id="y" class="field"></div>
+    <div class="fieldHeader">Size: </div>
+    <div id="size" class="field"></div>
     <canvas id="singleImage"></canvas>
     <!--<canvas id="backgroundRenderer"></canvas>-->
     <div id="debug" class="field"></div>
