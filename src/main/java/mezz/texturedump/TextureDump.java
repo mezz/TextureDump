@@ -2,22 +2,25 @@ package mezz.texturedump;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.IntBuffer;
+import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.gson.stream.JsonWriter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.commons.io.IOUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -54,8 +57,9 @@ public class TextureDump {
 					.map(TextureAtlasSprite::getIconName)
 					.collect(Collectors.toSet());
 
-			File output = new File(outputFolder, name + "_mipmap_" + level + ".json");
-			FileWriter out = new FileWriter(output);
+			final String filename = name + "_mipmap_" + level;
+			File output = new File(outputFolder, filename + ".html");
+			StringWriter out = new StringWriter();
 			JsonWriter jsonWriter = new JsonWriter(out);
 			jsonWriter.setIndent("    ");
 
@@ -75,6 +79,23 @@ public class TextureDump {
 				}
 			}
 			jsonWriter.endArray();
+			jsonWriter.close();
+			out.close();
+
+			final IResource resource = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(MODID, "page.html"));
+			final InputStream inputStream = resource.getInputStream();
+			StringWriter writer = new StringWriter();
+			IOUtils.copy(inputStream, writer, Charset.defaultCharset());
+			String webPage = writer.toString();
+			webPage = webPage.replaceFirst("\\[textureData\\]", out.toString());
+			webPage = webPage.replaceFirst("\\[textureName\\]", filename.toString());
+
+			FileWriter fileWriter = new FileWriter(output);
+			fileWriter.write(webPage);
+			fileWriter.close();
+
+
+			inputStream.close();
 
 			FMLLog.info("[TextureDump] Exported json to: %s", output.getAbsolutePath());
 		}
