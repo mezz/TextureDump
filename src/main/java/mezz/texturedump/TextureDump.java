@@ -39,6 +39,9 @@ public class TextureDump {
 	@SubscribeEvent
 	public void postTextureStitch(TextureStitchEvent.Post event) {
 		TextureMap map = event.getMap();
+		if (map.mapUploadedSprites.size() <= 1) {
+			return; // skip the first texture stitch event that only contains the missing texture
+		}
 		String name = map.getBasePath().replace('/', '_');
 		int mip = map.getMipmapLevels();
 		File outputFolder = new File("texture_dump");
