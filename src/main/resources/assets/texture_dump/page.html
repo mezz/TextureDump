@@ -47,15 +47,19 @@
                  backgroundImage = imageData[i];
                  }*/
 
+                if (imageData[i].name == "immersiveengineering:blocks/stoneDevice_cokeOven_on") {
+                    console.log("wtf");
+                }
+
                 var cellY = imageData[i].y / cellSize.y;
-                var cellsUsedY = imageData[i].height / cellSize.y;
+                var cellsUsedY = nearestUpperPow2(imageData[i].height) / cellSize.y;
 
                 for (var y = 0; y < cellsUsedY; ++y) {
                     if (cells[cellY + y] === undefined) {
                         cells[cellY + y] = []
                     }
                     var cellX = imageData[i].x / cellSize.x;
-                    var cellsUsedX = imageData[i].width / cellSize.x;
+                    var cellsUsedX = nearestUpperPow2(imageData[i].width) / cellSize.x;
                     for (var x = 0; x < cellsUsedX; ++x) {
                         cells[cellY + y][cellX + x] = i
                     }
@@ -100,11 +104,7 @@
 
             /*            debug.innerHTML = `
              Cell: ${cellX}-${cellY}<br/>
-             Client: ${eventInfo.clientX}-${eventInfo.clientY}<br/>
-             Layer: ${eventInfo.layerX}-${eventInfo.layerY}<br/>
              Offset: ${eventInfo.offsetX}-${eventInfo.offsetY}<br/>
-             Page: ${eventInfo.pageX}-${eventInfo.pageY}<br/>
-             Screen: ${eventInfo.screenX}-${eventInfo.screenY}<br/>
              `;*/
 
             if (cells[cellY] !== undefined && cells[cellY][cellX] !== undefined) {
@@ -140,6 +140,17 @@
                 yElement.innerText = "";
                 markerElement.style.display = "none";
             }
+        }
+
+        function nearestUpperPow2(v)
+        {
+            v--;
+            v|=v>>1;
+            v|=v>>2;
+            v|=v>>4;
+            v|=v>>8;
+            v|=v>>16;
+            return ++v;
         }
 
         document.addEventListener("DOMContentLoaded", initialize);
