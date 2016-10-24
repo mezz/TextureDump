@@ -3,9 +3,14 @@ package mezz.texturedump;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.gson.stream.JsonWriter;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -32,10 +37,50 @@ public class TextureDump {
 		TextureMap map = e.getMap();
 		String name = map.getBasePath().replace('/', '_');
 		int mip = map.getMipmapLevels();
-		saveGlTexture(name, map.getGlTextureId(), mip);
+		File outputFolder = new File("texture_dump");
+		if (!outputFolder.exists()) {
+			if (!outputFolder.mkdir()) {
+				FMLLog.severe("Failed to create directory " + outputFolder);
+				return;
+			}
+		}
+		saveGlTexture(name, map.getGlTextureId(), mip, outputFolder);
+		saveTextureInfo(name, map, mip, outputFolder);
 	}
 
-	public static void saveGlTexture(String name, int textureId, int mipmapLevels) {
+	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) throws IOException {
+		for (int level = 0; level <= mipmapLevels; level++) {
+			Set<String> animatedTextures = map.listAnimatedSprites.stream()
+					.map(TextureAtlasSprite::getIconName)
+					.collect(Collectors.toSet());
+
+			File output = new File(outputFolder, name + "_mipmap_" + level + ".json");
+			FileWriter out = new FileWriter(output);
+			JsonWriter jsonWriter = new JsonWriter(out);
+			jsonWriter.setIndent("    ");
+
+			jsonWriter.beginArray();
+			{
+				for (TextureAtlasSprite sprite : map.mapUploadedSprites.values()) {
+					String iconName = sprite.getIconName();
+					boolean animated = animatedTextures.contains(iconName);
+					jsonWriter.beginObject()
+							.name("name").value(iconName)
+							.name("animated").value(animated)
+							.name("x").value(sprite.getOriginX() / (1 << level))
+							.name("y").value(sprite.getOriginY() / (1 << level))
+							.name("width").value(sprite.getIconWidth() / (1 << level))
+							.name("height").value(sprite.getIconHeight() / (1 << level))
+							.endObject();
+				}
+			}
+			jsonWriter.endArray();
+
+			FMLLog.info("[TextureDump] Exported json to: %s", output.getAbsolutePath());
+		}
+	}
+
+	public static void saveGlTexture(String name, int textureId, int mipmapLevels, File outputFolder) {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
 		GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -47,8 +92,7 @@ public class TextureDump {
 			int size = width * height;
 
 			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
-			File output = new File("texture_atlas_dump_" + name + "_mipmap_" + level + ".png");
-
+			File output = new File(outputFolder, name + "_mipmap_" + level + ".png");
 			IntBuffer buffer = BufferUtils.createIntBuffer(size);
 			int[] data = new int[size];
 
