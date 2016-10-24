@@ -1,0 +1,245 @@
+<html>
+<head>
+    <script lang="JavaScript">
+
+        var cellSize = {x: 16, y: 16};
+        var cells = [];
+        var lastCell;
+
+        var nameElement;
+        var widthElement;
+        var heightElement;
+        var xElement;
+        var yElement;
+        var markerElement;
+        var imageElement;
+        var sourceImageElement;
+        var debugElement;
+
+        //var backgroundImage;
+
+        function initialize() {
+            var arrayLength = imageData.length;
+            cellSize = {x: Number.MAX_VALUE, y: Number.MAX_VALUE};
+            for (var i = 0; i < arrayLength; i++) {
+                if (imageData[i].width < cellSize.x) {
+                    cellSize.x = imageData[i].width
+                }
+                if (imageData[i].height < cellSize.y) {
+                    cellSize.y = imageData[i].height
+                }
+            }
+
+            var sheet = document.getElementById("sheet");
+            var sheetSize = {
+                width: sheet.width,
+                height: sheet.height
+            };
+
+            var cellDimensions = {
+                width: sheetSize.width / cellSize.x,
+                height: sheetSize.height / cellSize.y
+            };
+
+            for (var i = 0; i < arrayLength; i++) {
+                /*if (imageData[i].name == "minecraft:blocks/dirt") {
+                 console.log("Found Dirt");
+                 backgroundImage = imageData[i];
+                 }*/
+
+                if (imageData[i].name == "immersiveengineering:blocks/stoneDevice_cokeOven_on") {
+                    console.log("wtf");
+                }
+
+                var cellY = imageData[i].y / cellSize.y;
+                var cellsUsedY = nearestUpperPow2(imageData[i].height) / cellSize.y;
+
+                for (var y = 0; y < cellsUsedY; ++y) {
+                    if (cells[cellY + y] === undefined) {
+                        cells[cellY + y] = []
+                    }
+                    var cellX = imageData[i].x / cellSize.x;
+                    var cellsUsedX = nearestUpperPow2(imageData[i].width) / cellSize.x;
+                    for (var x = 0; x < cellsUsedX; ++x) {
+                        cells[cellY + y][cellX + x] = i
+                    }
+                }
+            }
+
+            nameElement = document.getElementById("name");
+            widthElement = document.getElementById("width");
+            heightElement = document.getElementById("height");
+            xElement = document.getElementById("x");
+            yElement = document.getElementById("y");
+            markerElement = document.getElementById("marker");
+            imageElement = document.getElementById("singleImage");
+            sourceImageElement = document.getElementById("sheet");
+            debugElement = document.getElementById("debug");
+
+            //console.log(cells);
+
+            sheet.addEventListener("mousemove", onMouseMove);
+            /*if (backgroundImage != null) {
+             var bgCanvas = document.getElementById("backgroundRenderer");
+             bgCanvas.width = backgroundImage.width * 2;
+             bgCanvas.height = backgroundImage.height * 2;
+             var ctx = bgCanvas.getContext("2d");
+             ctx.imageSmoothingEnabled = false;
+             ctx.drawImage(sourceImageElement,
+             backgroundImage.x, backgroundImage.y, backgroundImage.width, backgroundImage.height,
+             0, 0, bgCanvas.width, bgCanvas.height
+             );
+             console.log(bgCanvas.toDataURL())
+             document.getElementsByTagName("body")[0].style.backgroundImage = "url(" + bgCanvas.toDataURL() + ")";
+             }*/
+        }
+
+        function onMouseMove(eventInfo) {
+            var target = eventInfo.target;
+            var cellX = Math.floor((eventInfo.offsetX) / cellSize.x);
+            var cellY = Math.floor((eventInfo.offsetY) / cellSize.y);
+
+            var ctx = imageElement.getContext("2d");
+            ctx.imageSmoothingEnabled = false;
+
+            /*            debug.innerHTML = `
+             Cell: ${cellX}-${cellY}<br/>
+             Offset: ${eventInfo.offsetX}-${eventInfo.offsetY}<br/>
+             `;*/
+
+            if (cells[cellY] !== undefined && cells[cellY][cellX] !== undefined) {
+                var imageDataIndex = cells[cellY][cellX];
+                if (imageDataIndex != lastCell) {
+                    lastCell = imageDataIndex
+                    var data = imageData[imageDataIndex];
+
+                    nameElement.innerText = data.name;
+                    widthElement.innerText = data.width;
+                    heightElement.innerText = data.height;
+                    xElement.innerText = data.x;
+                    yElement.innerText = data.y;
+
+                    markerElement.style.top = data.y + target.offsetTop;
+                    markerElement.style.left = data.x + target.offsetLeft;
+                    markerElement.style.width = data.width-2;
+                    markerElement.style.height = data.height-2;
+                    markerElement.style.display = "block";
+
+                    ctx.clearRect(0, 0, imageElement.width, imageElement.height);
+                    ctx.drawImage(sourceImageElement,
+                            data.x, data.y, data.width, data.height,
+                            0, 0, imageElement.width, imageElement.height
+                    );
+                }
+            } else {
+                ctx.clearRect(0, 0, imageElement.width, imageElement.height);
+                nameElement.innerText = "";
+                widthElement.innerText = "";
+                heightElement.innerText = "";
+                xElement.innerText = "";
+                yElement.innerText = "";
+                markerElement.style.display = "none";
+            }
+        }
+
+        function nearestUpperPow2(v)
+        {
+            v--;
+            v|=v>>1;
+            v|=v>>2;
+            v|=v>>4;
+            v|=v>>8;
+            v|=v>>16;
+            return ++v;
+        }
+
+        document.addEventListener("DOMContentLoaded", initialize);
+
+    </script>
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            width: 100%;
+        }
+
+        .infoPanel {
+            float: left;
+            width: 15em;
+        }
+
+        .fieldHeader {
+            font-weight: bold;
+        }
+
+        .field {
+            min-height: 1.2em;
+            width: 15em;
+            -moz-box-shadow: 0 0 5px #fff;
+            -webkit-box-shadow: 0 0 5px #fff;
+            box-shadow: 0px 0px 5px #fff;
+        }
+
+        #name {
+            min-height: 2.4em;
+        }
+
+        #marker {
+            border: 1px solid red;
+            position: absolute;
+        }
+
+        #singleImage, #backgroundRenderer {
+            width: 128px;
+            height: 128px;
+            border: 1px black solid;
+        }
+
+        #sheetContainer {
+            width: calc(100% - 17em);
+            left: 17em;
+            height: calc(100% - 4em);
+            position: absolute;
+            overflow: scroll;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Texture Sheet</h1>
+</div>
+
+<div id="sheetContainer">
+    <div id="marker"></div>
+    <image id="sheet" src="textures_mipmap_0.png" />
+</div>
+
+<div class="infoPanel">
+    <div></div>
+    <div class="fieldHeader">Name: </div>
+    <div id="name" class="field"></div>
+    <div class="fieldHeader">Width: </div>
+    <div id="width" class="field"></div>
+    <div class="fieldHeader">Height: </div>
+    <div id="height" class="field"></div>
+    <div class="fieldHeader">X: </div>
+    <div id="x" class="field"></div>
+    <div class="fieldHeader">Y: </div>
+    <div id="y" class="field"></div>
+    <canvas id="singleImage"></canvas>
+    <!--<canvas id="backgroundRenderer"></canvas>-->
+    <div id="debug" class="field"></div>
+</div>
+
+<script language="JavaScript">
+    var imageData = [textureData];
+</script>
+<script>
+    initialize();
+</script>
+</body>
+</html>
