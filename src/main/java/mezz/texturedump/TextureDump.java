@@ -9,14 +9,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.gson.stream.JsonWriter;
+import mezz.texturedump.util.Log;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResource;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -27,7 +28,7 @@ import org.lwjgl.opengl.GL12;
 
 @Mod(modid = TextureDump.MODID, name = "Texture Dump", version = TextureDump.VERSION, clientSideOnly = true)
 public class TextureDump {
-	public static final String MODID = "texture_dump";
+	public static final String MODID = "texturedump";
 	public static final String VERSION = "1.0";
 
 	@Mod.EventHandler
@@ -36,19 +37,23 @@ public class TextureDump {
 	}
 
 	@SubscribeEvent
-	public void postTextureStitch(TextureStitchEvent.Post e) throws Exception {
-		TextureMap map = e.getMap();
+	public void postTextureStitch(TextureStitchEvent.Post event) {
+		TextureMap map = event.getMap();
 		String name = map.getBasePath().replace('/', '_');
 		int mip = map.getMipmapLevels();
 		File outputFolder = new File("texture_dump");
 		if (!outputFolder.exists()) {
 			if (!outputFolder.mkdir()) {
-				FMLLog.severe("Failed to create directory " + outputFolder);
+				Log.error("Failed to create directory " + outputFolder);
 				return;
 			}
 		}
 		saveGlTexture(name, map.getGlTextureId(), mip, outputFolder);
-		saveTextureInfo(name, map, mip, outputFolder);
+		try {
+			saveTextureInfo(name, map, mip, outputFolder);
+		} catch (IOException e) {
+			Log.error("Failed to save texture info.", e);
+		}
 	}
 
 	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) throws IOException {
@@ -82,7 +87,8 @@ public class TextureDump {
 			jsonWriter.close();
 			out.close();
 
-			final IResource resource = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(MODID, "page.html"));
+			IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+			final IResource resource = resourceManager.getResource(new ResourceLocation(MODID, "page.html"));
 			final InputStream inputStream = resource.getInputStream();
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(inputStream, writer, Charset.defaultCharset());
@@ -97,7 +103,7 @@ public class TextureDump {
 
 			inputStream.close();
 
-			FMLLog.info("[TextureDump] Exported json to: %s", output.getAbsolutePath());
+			Log.info("Exported html to: {}", output.getAbsolutePath());
 		}
 	}
 
@@ -123,9 +129,9 @@ public class TextureDump {
 
 			try {
 				ImageIO.write(bufferedimage, "png", output);
-				FMLLog.info("[TextureDump] Exported png to: %s", output.getAbsolutePath());
+				Log.info("Exported png to: {}", output.getAbsolutePath());
 			} catch (IOException ioexception) {
-				FMLLog.info("[TextureDump] Unable to write: ", ioexception);
+				Log.info("Unable to write: ", ioexception);
 			}
 		}
 	}
