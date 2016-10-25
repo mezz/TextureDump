@@ -89,6 +89,19 @@
                     }
 
                     if (imageDataIndex < 0) {
+                        var imageElementWidth = imageElement.width;
+                        var imageElementHeight = imageElement.height;
+                        var ctx = imageElement.getContext("2d");
+                        ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
+                        ctx.globalOpacity = 0.2;
+                        ctx.fillStyle = "rgba(75,54,37,1)";
+                        ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
+
+                        fastdom.mutate(function() {
+                            nameElement.innerText = "";
+                            sizeElement.innerText = "";
+                            markerElement.style.display = "none";
+                        });
                         return;
                     }
 
@@ -134,9 +147,11 @@
                     var imageElementHeight = imageElement.height;
                     var ctx = imageElement.getContext("2d");
                     ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
+                    ctx.globalOpacity = 0.2;
+                    ctx.fillStyle = "rgba(75,54,37,1)";
+                    ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
 
                     fastdom.mutate(function() {
-
                         nameElement.innerText = "";
                         sizeElement.innerText = "";
                         markerElement.style.display = "none";
@@ -256,6 +271,7 @@
         h1 {
             margin: 0px;
             padding: 0.5em;
+            font-family: Tahoma, Geneva, sans-serif;
         }
 
         #header {
@@ -266,9 +282,14 @@
             background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABEUlEQVRYhc2WPQ6DMAyFOQRrGZA6NWL0gDqRsWfg/sdwJ1fioafnTs6QIYltvviX6Tw2P4/NP/a8rPfrcVlZubbM3paZ6uN+KgeIgzDIDMR979177zc5BGTnoRerHgBdg65k98y1zA6zVw8QrjEzN7ObAAuNSkoVivEAUDEU4sOs7BhgPEjJ1QNgsiiXYlKxsmXntBGVAagyisbDDLAWy5IZ9/UAyrAaPhiarPw4AEqQ7THJ1IeZXj2AahSoqMorm6y3HBgGIFtmCIzyLCmxrOsBsuXCXBhDhyUhG2a/X7JyACWoQP5dGKpxAFgo9rb63lbZcDAZs79w9QDKEJ4zOTV+2QPGA1BjGBuJGkIqZOUAX1kSTo8tQHcyAAAAAElFTkSuQmCC');
         }
 
-        h1 > a:link, h1 > a:visited, h1 > a:hover, h1 > a:active {
+        h1 > a:link, h1 > a:visited {
             color: white;
             text-decoration: none;
+        }
+
+        h1 > a:hover, h1 > a:active {
+            color: white;
+            text-decoration: underline;
         }
 
         .infoPanel {
@@ -344,7 +365,7 @@
     <div id="headerContainer">
         <h1><a href="https://github.com/mezz/TextureDump">Texture Dump</a></h1>
     </div>
-    <div id="name"></div>
+    <div id="name">Move your mouse over the texture sheet to inspect a texture</div>
 </div>
 
 <div id="sheetContainer">
