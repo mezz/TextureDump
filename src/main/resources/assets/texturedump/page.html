@@ -66,17 +66,24 @@
 
         function onMouseMove(eventInfo) {
             fastdom.measure(function() {
-                var cellX = Math.floor(eventInfo.offsetX / cellSize.x);
-                var cellY = Math.floor(eventInfo.offsetY / cellSize.y);
+                eventInfo = eventInfo || window.event;
+
+                var target = eventInfo.target || eventInfo.srcElement;
+                var rect = target.getBoundingClientRect();
+                var offsetX = eventInfo.clientX - rect.left;
+                var offsetY = eventInfo.clientY - rect.top;
+                console.log([offsetX, offsetY]);
+
+                var cellX = Math.floor(offsetX / cellSize.x);
+                var cellY = Math.floor(offsetY / cellSize.y);
 
                 if (cells[cellY] !== undefined && cells[cellY][cellX] !== undefined) {
                     var containedSprites = cells[cellY][cellX];
                     var imageDataIndex = -1;
                     for (var i = 0; i < containedSprites.length; ++i) {
                         var data = imageData[containedSprites[i]];
-                        console.log(`Checking ${data.name}`);
-                        if (eventInfo.offsetX >= data.x && eventInfo.offsetX <= data.x + data.width) {
-                            if (eventInfo.offsetY >= data.y && eventInfo.offsetY <= data.y + data.height) {
+                        if (offsetX >= data.x && offsetX <= data.x + data.width) {
+                            if (offsetY >= data.y && offsetY <= data.y + data.height) {
                                 imageDataIndex = containedSprites[i];
                                 break;
                             }
@@ -97,6 +104,8 @@
                             sizeElement.innerText = "";
                             markerElement.style.display = "none";
                         });
+
+                        lastCell = -1;
                         return;
                     }
 
@@ -151,6 +160,7 @@
                         sizeElement.innerText = "";
                         markerElement.style.display = "none";
                     });
+                    lastCell = -1;
                 }
             });
         }
