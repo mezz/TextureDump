@@ -50,7 +50,10 @@
                     var cellX = Math.floor(sprite.x / cellSize.x);
                     var cellsUsedX = Math.ceil((sprite.x + sprite.width) / cellSize.x);
                     for (var x = 0; x < cellsUsedX; ++x) {
-                        cells[cellY + y][cellX + x].push(i)
+                        var cell = cells[cellY + y][cellX + x];
+                        if (cell) {
+                            cell.push(i)
+                        }
                     }
                 }
             }
