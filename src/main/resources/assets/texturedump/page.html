@@ -72,7 +72,6 @@
                 var rect = target.getBoundingClientRect();
                 var offsetX = eventInfo.clientX - rect.left;
                 var offsetY = eventInfo.clientY - rect.top;
-                console.log([offsetX, offsetY]);
 
                 var cellX = Math.floor(offsetX / cellSize.x);
                 var cellY = Math.floor(offsetY / cellSize.y);
