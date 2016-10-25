@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.IntBuffer;
 
 import mezz.texturedump.util.Log;
+import net.minecraftforge.fml.common.ProgressManager;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -18,13 +19,18 @@ public class TextureImageDumper {
 		GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
 		GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
 
+		ProgressManager.ProgressBar progressBar = ProgressManager.push("Dumping TextureMap to file", mipmapLevels + 1);
+
 		for (int level = 0; level <= mipmapLevels; level++) {
 			int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
 			int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
 			int size = width * height;
 
 			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
-			File output = new File(outputFolder, name + "_mipmap_" + level + ".png");
+			String fileName = name + "_mipmap_" + level + ".png";
+			progressBar.step(fileName);
+
+			File output = new File(outputFolder, fileName);
 			IntBuffer buffer = BufferUtils.createIntBuffer(size);
 			int[] data = new int[size];
 
@@ -39,5 +45,7 @@ public class TextureImageDumper {
 				Log.info("Unable to write: ", ioexception);
 			}
 		}
+
+		ProgressManager.pop(progressBar);
 	}
 }

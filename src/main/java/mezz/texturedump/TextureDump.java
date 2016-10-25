@@ -1,7 +1,6 @@
 package mezz.texturedump;
 
 import java.io.File;
-import java.io.IOException;
 
 import mezz.texturedump.dumpers.ModStatsDumper;
 import mezz.texturedump.dumpers.TextureImageDumper;
@@ -41,18 +40,10 @@ public class TextureDump {
 		}
 
 		TextureImageDumper.saveGlTexture(name, map.getGlTextureId(), mip, outputFolder);
-		try {
-			TextureInfoDumper.saveTextureInfo(name, map, mip, outputFolder);
-		} catch (IOException e) {
-			Log.error("Failed to save texture info.", e);
-		}
+		TextureInfoDumper.saveTextureInfo(name, map, mip, outputFolder);
 
 		ModStatsDumper modStatsDumper = new ModStatsDumper();
-		try {
-			modStatsDumper.saveModStats(name, map, outputFolder);
-		} catch (IOException e) {
-			Log.error("Failed to save mod statistics info.", e);
-		}
+		modStatsDumper.saveModStats(name, map, outputFolder);
 	}
 
 }

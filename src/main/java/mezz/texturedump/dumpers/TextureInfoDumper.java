@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,56 +19,71 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.ProgressManager;
 import org.apache.commons.io.IOUtils;
 
 public class TextureInfoDumper {
-	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) throws IOException {
+	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) {
 		Set<String> animatedTextures = map.listAnimatedSprites.stream()
 				.map(TextureAtlasSprite::getIconName)
 				.collect(Collectors.toSet());
 
+		ProgressManager.ProgressBar progressBar = ProgressManager.push("Dumping TextureMap info to file", mipmapLevels + 1);
+
 		for (int level = 0; level <= mipmapLevels; level++) {
 			final String filename = name + "_mipmap_" + level;
 			File output = new File(outputFolder, filename + ".html");
+			progressBar.step(filename);
+
 			StringWriter out = new StringWriter();
 			JsonWriter jsonWriter = new JsonWriter(out);
 			jsonWriter.setIndent("    ");
 
-			jsonWriter.beginArray();
-			{
-				for (TextureAtlasSprite sprite : map.mapUploadedSprites.values()) {
-					String iconName = sprite.getIconName();
-					boolean animated = animatedTextures.contains(iconName);
-					jsonWriter.beginObject()
-							.name("name").value(iconName)
-							.name("animated").value(animated)
-							.name("x").value(sprite.getOriginX() / (1 << level))
-							.name("y").value(sprite.getOriginY() / (1 << level))
-							.name("width").value(sprite.getIconWidth() / (1 << level))
-							.name("height").value(sprite.getIconHeight() / (1 << level))
-							.endObject();
+			Collection<TextureAtlasSprite> values = map.mapUploadedSprites.values();
+			ProgressManager.ProgressBar progressBar2 = ProgressManager.push("Mipmap Level " + level, values.size());
+			try {
+				jsonWriter.beginArray();
+				{
+					for (TextureAtlasSprite sprite : values) {
+						String iconName = sprite.getIconName();
+						progressBar2.step(iconName);
+						boolean animated = animatedTextures.contains(iconName);
+						jsonWriter.beginObject()
+								.name("name").value(iconName)
+								.name("animated").value(animated)
+								.name("x").value(sprite.getOriginX() / (1 << level))
+								.name("y").value(sprite.getOriginY() / (1 << level))
+								.name("width").value(sprite.getIconWidth() / (1 << level))
+								.name("height").value(sprite.getIconHeight() / (1 << level))
+								.endObject();
+					}
 				}
+				jsonWriter.endArray();
+				jsonWriter.close();
+				out.close();
+
+				IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+				final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, "page.html"));
+				final InputStream inputStream = resource.getInputStream();
+				StringWriter writer = new StringWriter();
+				IOUtils.copy(inputStream, writer, Charset.defaultCharset());
+				String webPage = writer.toString();
+				webPage = webPage.replaceFirst("\\[textureData\\]", out.toString());
+				webPage = webPage.replaceFirst("\\[textureName\\]", filename);
+
+				FileWriter fileWriter = new FileWriter(output);
+				fileWriter.write(webPage);
+				fileWriter.close();
+
+				inputStream.close();
+
+				Log.info("Exported html to: {}", output.getAbsolutePath());
+			} catch (IOException e) {
+				Log.error("Failed to save texture info.", e);
 			}
-			jsonWriter.endArray();
-			jsonWriter.close();
-			out.close();
-
-			IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
-			final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, "page.html"));
-			final InputStream inputStream = resource.getInputStream();
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(inputStream, writer, Charset.defaultCharset());
-			String webPage = writer.toString();
-			webPage = webPage.replaceFirst("\\[textureData\\]", out.toString());
-			webPage = webPage.replaceFirst("\\[textureName\\]", filename);
-
-			FileWriter fileWriter = new FileWriter(output);
-			fileWriter.write(webPage);
-			fileWriter.close();
-
-			inputStream.close();
-
-			Log.info("Exported html to: {}", output.getAbsolutePath());
+			ProgressManager.pop(progressBar2);
 		}
+
+		ProgressManager.pop(progressBar);
 	}
 }
