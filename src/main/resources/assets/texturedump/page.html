@@ -17,15 +17,7 @@
 
         function initialize() {
             var arrayLength = imageData.length;
-            cellSize = {x: Number.MAX_VALUE, y: Number.MAX_VALUE};
-            for (var i = 0; i < arrayLength; i++) {
-                if (imageData[i].width < cellSize.x) {
-                    cellSize.x = imageData[i].width
-                }
-                if (imageData[i].height < cellSize.y) {
-                    cellSize.y = imageData[i].height
-                }
-            }
+            cellSize = {x: 128, y: 128};
 
             var sheet = document.getElementById("sheet");
             var sheetSize = {
@@ -38,27 +30,32 @@
                 height: sheetSize.height / cellSize.y
             };
 
+            var sheetContainerElement = document.getElementById("sheetContainer");
+            sourceImageElement = document.getElementById("sheet");
+
             for (var i = 0; i < arrayLength; i++) {
                 /*if (imageData[i].name == "minecraft:blocks/dirt") {
                  console.log("Found Dirt");
                  backgroundImage = imageData[i];
                  }*/
 
-                if (imageData[i].name == "immersiveengineering:blocks/stoneDevice_cokeOven_on") {
-                    console.log("wtf");
-                }
-
-                var cellY = imageData[i].y / cellSize.y;
-                var cellsUsedY = nearestUpperPow2(imageData[i].height) / cellSize.y;
+                var cellY = Math.floor(imageData[i].y / cellSize.y);
+                var cellsUsedY = Math.ceil(imageData[i].height / cellSize.y);
 
                 for (var y = 0; y < cellsUsedY; ++y) {
                     if (cells[cellY + y] === undefined) {
                         cells[cellY + y] = []
                     }
-                    var cellX = imageData[i].x / cellSize.x;
-                    var cellsUsedX = nearestUpperPow2(imageData[i].width) / cellSize.x;
+
+                    var cellX = Math.floor(imageData[i].x / cellSize.x);
+                    var cellsUsedX = Math.ceil(imageData[i].width / cellSize.x);
+
                     for (var x = 0; x < cellsUsedX; ++x) {
-                        cells[cellY + y][cellX + x] = i
+                        if (cells[cellY + y][cellX + x] === undefined) {
+                            cells[cellY + y][cellX + x] = [];
+                        }
+
+                        cells[cellY + y][cellX + x].push(i)
                     }
                 }
             }
@@ -67,10 +64,10 @@
             sizeElement = document.getElementById("size");
             markerElement = document.getElementById("marker");
             imageElement = document.getElementById("singleImage");
-            sourceImageElement = document.getElementById("sheet");
+
             debugElement = document.getElementById("debug");
 
-            //console.log(cells);
+            console.log(cells);
 
             sheet.addEventListener("mousemove", onMouseMove);
             /*if (backgroundImage != null) {
@@ -96,13 +93,29 @@
             var ctx = imageElement.getContext("2d");
             ctx.imageSmoothingEnabled = false;
 
-            /*            debug.innerHTML = `
+            /*
+             debug.innerHTML = `
              Cell: ${cellX}-${cellY}<br/>
              Offset: ${eventInfo.offsetX}-${eventInfo.offsetY}<br/>
              `;*/
 
             if (cells[cellY] !== undefined && cells[cellY][cellX] !== undefined) {
-                var imageDataIndex = cells[cellY][cellX];
+                var containedSprites = cells[cellY][cellX];
+                var imageDataIndex = -1;
+                for (var i = 0; i < containedSprites.length; ++i) {
+                    var data = imageData[containedSprites[i]];
+                    if (eventInfo.offsetX >= data.x && eventInfo.offsetX <= data.x + data.width) {
+                        if (eventInfo.offsetY >= data.y && eventInfo.offsetY <= data.y + data.height) {
+                            imageDataIndex = containedSprites[i];
+                            break;
+                        }
+                    }
+                }
+                if (imageDataIndex < 0) {
+                    console.log("No sprite");
+                    return;
+                }
+
                 if (imageDataIndex != lastCell) {
                     lastCell = imageDataIndex
                     var data = imageData[imageDataIndex];
@@ -176,7 +189,7 @@
             min-height: 2.4em;
         }
 
-        #marker {
+        #marker, .texturePlaceHolder {
             border: 1px solid red;
             position: absolute;
         }
@@ -199,6 +212,7 @@
 <body>
 <div class="header">
     <h1><a href="https://github.com/mezz/TextureDump">Texture Dump</a></h1>
+
 </div>
 
 <div id="sheetContainer">
