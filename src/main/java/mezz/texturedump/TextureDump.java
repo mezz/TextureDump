@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod(modid = TextureDump.MODID, name = "Texture Dump", version = TextureDump.VERSION, clientSideOnly = true)
 public class TextureDump {
 	public static final String MODID = "texturedump";
-	public static final String VERSION = "1.2";
+	public static final String VERSION = "@VERSION@";
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
