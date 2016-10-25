@@ -2,9 +2,19 @@ package mezz.texturedump;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.IntBuffer;
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,7 +28,10 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.io.IOUtils;
@@ -57,14 +70,74 @@ public class TextureDump {
 		} catch (IOException e) {
 			Log.error("Failed to save texture info.", e);
 		}
+		try {
+			saveModStats(name, map, outputFolder);
+		} catch (IOException e) {
+			Log.error("Failed to save mod statistics info.", e);
+		}
+	}
+
+	public static void saveModStats(String name, TextureMap map, File outputFolder) throws IOException {
+		Map<String, Long> modPixelCounts = map.mapUploadedSprites.values().stream()
+				.collect(Collectors.groupingBy(
+						sprite -> new ResourceLocation(sprite.getIconName()).getResourceDomain(),
+						Collectors.summingLong(sprite -> sprite.getIconWidth() * sprite.getIconHeight()))
+				);
+
+		final long totalPixels = modPixelCounts.values().stream().mapToLong(longValue -> longValue).sum();
+
+		Map<String, ModContainer> modContainersForLowercaseIds = new HashMap<>();
+		for (Map.Entry<String, ModContainer> modEntry : Loader.instance().getIndexedModList().entrySet()) {
+			String lowercaseId = modEntry.getKey().toLowerCase(Locale.ENGLISH);
+			modContainersForLowercaseIds.put(lowercaseId, modEntry.getValue());
+		}
+
+		final String filename = name + "_mod_statistics";
+		File output = new File(outputFolder, filename + ".json");
+		FileWriter fileWriter = new FileWriter(output);
+		JsonWriter jsonWriter = new JsonWriter(fileWriter);
+		jsonWriter.setIndent("    ");
+		jsonWriter.beginArray();
+		{
+			List<Map.Entry<String, Long>> sortedEntries = modPixelCounts.entrySet().stream()
+					.sorted(Collections.reverseOrder(Comparator.comparing(Map.Entry::getValue)))
+					.collect(Collectors.toList());
+			for (Map.Entry<String, Long> modPixels : sortedEntries) {
+				String modId = modPixels.getKey();
+
+				long pixelCount = modPixels.getValue();
+				jsonWriter.beginObject()
+						.name("modId").value(modId)
+						.name("pixelCount").value(pixelCount)
+						.name("percentOfTextureMap").value(pixelCount * 100f / totalPixels);
+
+				ModContainer modContainer = modContainersForLowercaseIds.get(modId.toLowerCase(Locale.ENGLISH));
+				if (modContainer != null) {
+					ModMetadata metadata = modContainer.getMetadata();
+					jsonWriter.name("modName").value(metadata.name)
+							.name("url").value(metadata.url);
+
+					jsonWriter.name("authors").beginArray();
+					for (String author : metadata.authorList) {
+						jsonWriter.value(author);
+					}
+					jsonWriter.endArray();
+				}
+
+				jsonWriter.endObject();
+			}
+		}
+		jsonWriter.endArray();
+		jsonWriter.close();
+		fileWriter.close();
 	}
 
 	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) throws IOException {
-		for (int level = 0; level <= mipmapLevels; level++) {
-			Set<String> animatedTextures = map.listAnimatedSprites.stream()
-					.map(TextureAtlasSprite::getIconName)
-					.collect(Collectors.toSet());
+		Set<String> animatedTextures = map.listAnimatedSprites.stream()
+				.map(TextureAtlasSprite::getIconName)
+				.collect(Collectors.toSet());
 
+		for (int level = 0; level <= mipmapLevels; level++) {
 			final String filename = name + "_mipmap_" + level;
 			File output = new File(outputFolder, filename + ".html");
 			StringWriter out = new StringWriter();
