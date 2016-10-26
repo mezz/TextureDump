@@ -1,0 +1,93 @@
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: "Lucida Console", Monaco, monospace;
+}
+
+h1 {
+    margin: 0;
+    padding: 0.5em;
+    font-family: Tahoma, Geneva, sans-serif;
+}
+
+#header {
+    width: 100%;
+    -webkit-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+    -moz-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+    box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+}
+
+h1 > a:link, h1 > a:visited {
+    color: white;
+    text-decoration: none;
+}
+
+h1 > a:hover, h1 > a:active {
+    color: white;
+    text-decoration: underline;
+}
+
+.infoPanel {
+    float: left;
+    width: calc(256px + 2em);
+    padding-left: 1em;
+    margin-top: 1em;
+}
+
+.fieldHeader {
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(150, 150, 150, 1);
+}
+
+.field {
+    min-height: 1.2em;
+    width: 15em;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(150, 150, 150, 1);
+}
+
+#name {
+    color: white;
+    text-shadow: 1px 1px 1px rgba(150, 150, 150, 1);
+    margin-left: 0.5em;
+    min-height: 1em;
+    margin-bottom: 0.5em;
+    font-size:1.5em;
+}
+
+#marker {
+    border: 1px solid red;
+    position: absolute;
+    display: none;
+}
+
+#singleImage {
+    margin-top: 1em;
+    width: 256px;
+    height: 256px;
+    -webkit-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+    -moz-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+    box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+}
+
+#sheetContainer {
+    width: calc(100% - 17em);
+    left: calc(256px + 2em);
+    height: calc(100% - 5.2em);
+    position: absolute;
+    overflow: scroll;
+}
+
+#headerContainer {
+    background-repeat: repeat-x;
+}
+
+#loading {
+    float: right;
+    margin-right: 1em;
+    color: white;
+}

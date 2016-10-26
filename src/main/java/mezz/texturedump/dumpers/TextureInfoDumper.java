@@ -62,20 +62,19 @@ public class TextureInfoDumper {
 				jsonWriter.close();
 				out.close();
 
-				IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
-				final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, "page.html"));
-				final InputStream inputStream = resource.getInputStream();
-				StringWriter writer = new StringWriter();
-				IOUtils.copy(inputStream, writer, Charset.defaultCharset());
-				String webPage = writer.toString();
-				webPage = webPage.replaceFirst("\\[textureData\\]", out.toString());
+				String webPage = getResourceAsString("page.html");
+				String textureJson = out.toString();
+				webPage = webPage.replaceFirst("\\[textureData\\]", textureJson);
 				webPage = webPage.replaceFirst("\\[textureName\\]", filename);
 
 				FileWriter fileWriter = new FileWriter(output);
 				fileWriter.write(webPage);
 				fileWriter.close();
 
-				inputStream.close();
+				writeFileFromResource(outputFolder, "fastdom.min.js");
+				writeFileFromResource(outputFolder, "texturedump.js");
+				writeFileFromResource(outputFolder, "texturedump.css");
+				writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
 
 				Log.info("Exported html to: {}", output.getAbsolutePath());
 			} catch (IOException e) {
@@ -85,5 +84,23 @@ public class TextureInfoDumper {
 		}
 
 		ProgressManager.pop(progressBar);
+	}
+
+	private static void writeFileFromResource(File outputFolder, String s) throws IOException {
+		FileWriter fileWriter;
+		fileWriter = new FileWriter(new File(outputFolder, s));
+		fileWriter.write(getResourceAsString(s));
+		fileWriter.close();
+	}
+
+	private static String getResourceAsString(String resourceName) throws IOException {
+		IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+		final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, resourceName));
+		final InputStream inputStream = resource.getInputStream();
+		StringWriter writer = new StringWriter();
+		IOUtils.copy(inputStream, writer, Charset.defaultCharset());
+		String webPage = writer.toString();
+		inputStream.close();
+		return webPage;
 	}
 }
