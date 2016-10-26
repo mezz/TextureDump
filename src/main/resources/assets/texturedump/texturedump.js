@@ -1,8 +1,9 @@
 var cellSize = {x: 128, y: 128};
 var cells = [];
+var mods = {};
 var lastCell;
 
-var modIdElement;
+var resourceDomainElement;
 var nameElement;
 var sizeElement;
 var markerElement;
@@ -17,6 +18,18 @@ function initialize() {
         width: Math.ceil(sheet.width / cellSize.x),
         height: Math.ceil(sheet.height / cellSize.y)
     };
+
+    //Proccess mod statistics
+    for (var i = 0; i < modStatistics.length; i++) {
+        var mod = modStatistics[i];
+        if (mods.hasOwnProperty(mod.resourceDomain)) {
+            console.log("resourceDomain '" + mod.resourceDomain + "' is listed multiple times.");
+            continue;
+        } 
+        
+        mods[mod.resourceDomain] = mod;
+        mods[mod.resourceDomain].tiles = [];
+    }
 
     //Preallocate Cells for speed
     cells = [];
@@ -41,10 +54,16 @@ function initialize() {
                 cells[y][x].push(i);
             }
         }
+
+        var resourceDomain = sprite.name.substring(0, sprite.name.indexOf(":"));
+        if (mods.hasOwnProperty(resourceDomain) && mods[resourceDomain].tiles !== undefined) {
+            mods[resourceDomain].tiles.push(i);
+        }
     }
 
     //Pre-resolve elements that will be updated
-    modIdElement = document.getElementById("modId");
+    resourceDomainElement = document.getElementById("resourceDomain");
+    modNameElement = document.getElementById("modName");
     nameElement = document.getElementById("name");
     sizeElement = document.getElementById("size");
     markerElement = document.getElementById("marker");
@@ -104,8 +123,12 @@ function onMouseMove(eventInfo) {
 
                 updateSingleImage(data);
 
+                var resourceDomain = data.name.substring(0, data.name.indexOf(":"));
+                var modName = mods[resourceDomain].modName;
+
                 fastdom.mutate(function() {
-                    modIdElement.innerText = data.name.substring(0, data.name.indexOf(":"));
+                    resourceDomainElement.innerText = resourceDomain;
+                    modNameElement.innerText = modName;
                     nameElement.innerText = data.name.substring(data.name.indexOf(":") + 1);
                     sizeElement.innerText = data.width + " x " + data.height;
 
