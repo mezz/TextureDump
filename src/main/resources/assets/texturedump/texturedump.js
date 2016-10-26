@@ -28,9 +28,9 @@ function initialize() {
     }
 
     //Add sprite indexes to all the cells they occupy
-    var arrayLength = imageData.length;
+    var arrayLength = textureData.length;
     for (var i = 0; i < arrayLength; i++) {
-        var sprite = imageData[i];
+        var sprite = textureData[i];
 
         var cellMinY = Math.floor(sprite.y / cellSize.y);
         var cellMaxY = Math.ceil((sprite.y + sprite.height) / cellSize.y);
@@ -71,25 +71,19 @@ function onMouseMove(eventInfo) {
 
         if (cells[cellY] !== undefined && cells[cellY][cellX] !== undefined) {
             var containedSprites = cells[cellY][cellX];
-            var imageDataIndex = -1;
+            var textureDataIndex = -1;
             for (var i = 0; i < containedSprites.length; ++i) {
-                var data = imageData[containedSprites[i]];
+                var data = textureData[containedSprites[i]];
                 if (offsetX >= data.x && offsetX <= data.x + data.width) {
                     if (offsetY >= data.y && offsetY <= data.y + data.height) {
-                        imageDataIndex = containedSprites[i];
+                        textureDataIndex = containedSprites[i];
                         break;
                     }
                 }
             }
 
-            if (imageDataIndex < 0) {
-                var imageElementWidth = imageElement.width;
-                var imageElementHeight = imageElement.height;
-                var ctx = imageElement.getContext("2d");
-                ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
-                ctx.globalOpacity = 0.2;
-                ctx.fillStyle = "rgba(119,119,119,1)";
-                ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
+            if (textureDataIndex < 0) {
+                updateSingleImage(null);
 
                 fastdom.mutate(function() {
                     nameElement.innerText = "";
@@ -101,30 +95,14 @@ function onMouseMove(eventInfo) {
                 return;
             }
 
-            if (imageDataIndex != lastCell) {
-                lastCell = imageDataIndex;
-                var data = imageData[imageDataIndex];
+            if (textureDataIndex != lastCell) {
+                lastCell = textureDataIndex;
+                var data = textureData[textureDataIndex];
 
                 var targetTop = eventInfo.target.offsetTop;
                 var targetLeft = eventInfo.target.offsetLeft;
 
-                var imageElementWidth = imageElement.width;
-                var imageElementHeight = imageElement.height;
-
-                var ctx = imageElement.getContext("2d");
-                ctx.mozImageSmoothingEnabled = false;
-                ctx.msImageSmoothingEnabled = false;
-                ctx.imageSmoothingEnabled = false;
-
-                ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
-                ctx.globalOpacity = 0.2;
-                ctx.fillStyle = "rgba(119,119,119,1)";
-                ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
-                ctx.globalOpacity = 1;
-                ctx.drawImage(sourceImageElement,
-                    data.x, data.y, data.width, data.height,
-                    0, 0, imageElementWidth, imageElementHeight
-                );
+                updateSingleImage(data);
 
                 fastdom.mutate(function() {
                     modIdElement.innerText = data.name.substring(0, data.name.indexOf(":"));
@@ -139,13 +117,7 @@ function onMouseMove(eventInfo) {
                 });
             }
         } else {
-            var imageElementWidth = imageElement.width;
-            var imageElementHeight = imageElement.height;
-            var ctx = imageElement.getContext("2d");
-            ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
-            ctx.globalOpacity = 0.2;
-            ctx.fillStyle = "rgba(119,119,119,1)";
-            ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
+            updateSingleImage(null);
 
             fastdom.mutate(function() {
                 nameElement.innerText = "";
@@ -157,6 +129,29 @@ function onMouseMove(eventInfo) {
     });
 }
 
+function updateSingleImage(data) {
+    var imageElementWidth = imageElement.width;
+    var imageElementHeight = imageElement.height;
+
+    var ctx = imageElement.getContext("2d");
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
+    ctx.globalOpacity = 0.2;
+    ctx.fillStyle = "rgba(119,119,119,1)";
+    ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
+
+    if (data != null) {
+        ctx.globalOpacity = 1;
+        ctx.drawImage(sourceImageElement,
+            data.x, data.y, data.width, data.height,
+            0, 0, imageElementWidth, imageElementHeight
+        );
+    }
+}
+
 function onTextureLoaded() {
     initialize();
 
@@ -164,15 +159,15 @@ function onTextureLoaded() {
     var atlasBackgroundImage;
     var headerBackgroundImage;
 
-    for (var i = 0; i < imageData.length; i++) {
-        if (imageData[i].name == "minecraft:blocks/dirt") {
-            backgroundImage = imageData[i];
+    for (var i = 0; i < textureData.length; i++) {
+        if (textureData[i].name == "minecraft:blocks/dirt") {
+            backgroundImage = textureData[i];
         }
-        if (imageData[i].name == "minecraft:blocks/sandstone_smooth") {
-            atlasBackgroundImage = imageData[i];
+        if (textureData[i].name == "minecraft:blocks/sandstone_smooth") {
+            atlasBackgroundImage = textureData[i];
         }
-        if (imageData[i].name == "minecraft:blocks/grass_side") {
-            headerBackgroundImage = imageData[i];
+        if (textureData[i].name == "minecraft:blocks/grass_side") {
+            headerBackgroundImage = textureData[i];
         }
     }
 
@@ -181,7 +176,6 @@ function onTextureLoaded() {
             var sourceImageElement = document.getElementById("sheet");
             var dataUrl;
 
-            //var bgCanvas = document.getElementById("backgroundRenderer");
             var bgCanvas = document.createElement("canvas");
             bgCanvas.width = backgroundImage.width * 2;
             bgCanvas.height = backgroundImage.height * 2;
@@ -237,15 +231,14 @@ function onTextureLoaded() {
             dataUrl = bgCanvas.toDataURL();
             document.getElementById("headerContainer").style.backgroundImage = "url(" + dataUrl + ")";
         } catch(err) {
-            console.log("Dynamic background not available in the current context");
+            console.log("Dynamic background not available in the current context because:");
             console.log(err);
-            return;
         }
     }
 }
 
 function notifyOnImageComplete() {
-    var img = document.getElementById("sheet")
+    var img = document.getElementById("sheet");
     if (img.complete) {
         onTextureLoaded()
     } else {

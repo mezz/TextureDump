@@ -40,7 +40,7 @@ public class ModStatsDumper {
 		final long totalPixels = modPixelCounts.values().stream().mapToLong(longValue -> longValue).sum();
 
 		final String filename = name + "_mod_statistics";
-		File output = new File(outputFolder, filename + ".json");
+		File output = new File(outputFolder, filename + ".js");
 
 		List<Map.Entry<String, Long>> sortedEntries = modPixelCounts.entrySet().stream()
 				.sorted(Collections.reverseOrder(Comparator.comparing(Map.Entry::getValue)))
@@ -50,6 +50,7 @@ public class ModStatsDumper {
 
 		try {
 			FileWriter fileWriter = new FileWriter(output);
+			fileWriter.write("var modStatistics = \n//Start of Data\n");
 			JsonWriter jsonWriter = new JsonWriter(fileWriter);
 			jsonWriter.setIndent("    ");
 			jsonWriter.beginArray();
