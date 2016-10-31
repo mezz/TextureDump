@@ -10,6 +10,9 @@ var markerElement;
 var imageElement;
 var sourceImageElement;
 var debugElement;
+var resourceDomainsElement;
+var resourceDomainOverlayElement;
+var modNameElement;
 
 function initialize() {
     var sheet = document.getElementById("sheet");
@@ -70,10 +73,27 @@ function initialize() {
     imageElement = document.getElementById("singleImage");
     debugElement = document.getElementById("debug");
     sourceImageElement = document.getElementById("sheet");
+    resourceDomainsElement = document.getElementById("resourceDomains");
+    resourceDomainOverlayElement = document.getElementById("resourceDomainOverlay");
+
+    resourceDomainsElement.appendChild(document.createElement("option"));
+    for(var resourceDomain in mods){
+        console.log(resourceDomain + ': ' + mods[resourceDomain].modName);
+        var newOption = document.createElement("option");
+        newOption.value = resourceDomain;
+        newOption.innerHTML = mods[resourceDomain].modName
+        resourceDomainsElement.appendChild(newOption)
+    }
 
     document.getElementById("loading").style.display = "none";
 
+    resourceDomainOverlayElement.style.top = -sheet.height;
+    resourceDomainOverlayElement.style.left = sheet.left;
+    resourceDomainOverlayElement.width = sheet.width;
+    resourceDomainOverlayElement.height = sheet.height;
+
     sheet.addEventListener("mousemove", onMouseMove);
+    resourceDomainOverlayElement.addEventListener("mousemove", onMouseMove);
 }
 
 function onMouseMove(eventInfo) {
@@ -172,6 +192,30 @@ function updateSingleImage(data) {
             data.x, data.y, data.width, data.height,
             0, 0, imageElementWidth, imageElementHeight
         );
+    }
+}
+
+function highlightResourceDomain() {
+    var resourceDomain = resourceDomainsElement.options[resourceDomainsElement.selectedIndex].value;
+    console.log(resourceDomain);
+
+    var ctx = resourceDomainOverlayElement.getContext("2d");
+    ctx.clearRect(0, 0, resourceDomainOverlayElement.width, resourceDomainOverlayElement.height);
+    if (mods.hasOwnProperty(resourceDomain)) {
+        var mod = mods[resourceDomain];
+
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, resourceDomainOverlayElement.width, resourceDomainOverlayElement.height);
+
+        for (var i = 0; i < mod.tiles.length; ++i) {
+            var tile = textureData[mod.tiles[i]];
+            ctx.clearRect(tile.x, tile.y, tile.width, tile.height);
+        }
     }
 }
 

@@ -4,13 +4,17 @@
     <script lang="JavaScript" src="texturedump.js" type="application/javascript"></script>
     <link rel="stylesheet" href="texturedump.css" type="text/css"/>
     <link rel="stylesheet" href="texturedump.backgrounds.css" type="text/css"/>
-    <script lang="JavaScript" src="[textureName].js" type="application/javascript"></script>
-    <script lang="JavaScript" src="[statisticsFile].js" type="application/javascript"></script>
+    <script lang="JavaScript" src="textures_mipmap_0.js" type="application/javascript"></script>
+    <script lang="JavaScript" src="textures_mod_statistics.js" type="application/javascript"></script>
 </head>
 <body>
 
 <div id="header">
-    <div id="loading"><h1>Loading...</h1></div>
+    <div class="rightAligned">
+        <div id="loading"><h1>Loading...</h1></div>
+        <div><p>Highlight Resource Domain: </p><select id="resourceDomains" onchange="highlightResourceDomain()"></select> </div>
+    </div>
+
     <div id="headerContainer">
         <h1><a href="https://github.com/mezz/TextureDump">Texture Dump</a></h1>
     </div>
@@ -20,6 +24,7 @@
 <div id="sheetContainer">
     <div id="marker"></div>
     <image id="sheet" src="[textureName].png"></image>
+    <canvas id="resourceDomainOverlay"></canvas>
 </div>
 
 <div class="infoPanel">
