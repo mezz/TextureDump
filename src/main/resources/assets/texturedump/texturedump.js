@@ -3,6 +3,9 @@ var cells = [];
 var mods = {};
 var lastCell;
 
+var totalSheetPixels = 1;
+var totalUsedPixels = 1;
+
 var resourceDomainElement;
 var nameElement;
 var sizeElement;
@@ -13,6 +16,9 @@ var debugElement;
 var resourceDomainsElement;
 var resourceDomainOverlayElement;
 var modNameElement;
+var mapPixelPercentElement;
+var sheetPixelPercentElement;
+var modPercentageElement;
 
 function initialize() {
     var sheet = document.getElementById("sheet");
@@ -21,6 +27,8 @@ function initialize() {
         width: Math.ceil(sheet.width / cellSize.x),
         height: Math.ceil(sheet.height / cellSize.y)
     };
+    totalSheetPixels = sheet.width * sheet.height;
+    totalUsedPixels = 0;
 
     //Proccess mod statistics
     for (var i = 0; i < modStatistics.length; i++) {
@@ -28,10 +36,11 @@ function initialize() {
         if (mods.hasOwnProperty(mod.resourceDomain)) {
             console.log("resourceDomain '" + mod.resourceDomain + "' is listed multiple times.");
             continue;
-        } 
-        
+        }
+
         mods[mod.resourceDomain] = mod;
         mods[mod.resourceDomain].tiles = [];
+        mods[mod.resourceDomain].totalTilePixels = 0;
     }
 
     //Preallocate Cells for speed
@@ -44,8 +53,7 @@ function initialize() {
     }
 
     //Add sprite indexes to all the cells they occupy
-    var arrayLength = textureData.length;
-    for (var i = 0; i < arrayLength; i++) {
+    for (var i = 0; i < textureData.length; i++) {
         var sprite = textureData[i];
 
         var cellMinY = Math.floor(sprite.y / cellSize.y);
@@ -61,7 +69,10 @@ function initialize() {
         var resourceDomain = sprite.name.substring(0, sprite.name.indexOf(":"));
         if (mods.hasOwnProperty(resourceDomain) && mods[resourceDomain].tiles !== undefined) {
             mods[resourceDomain].tiles.push(i);
+            mods[resourceDomain].totalTilePixels += textureData[i].width * textureData[i].height
         }
+
+        totalUsedPixels += sprite.width * sprite.height;
     }
 
     //Pre-resolve elements that will be updated
@@ -75,6 +86,9 @@ function initialize() {
     sourceImageElement = document.getElementById("sheet");
     resourceDomainsElement = document.getElementById("resourceDomains");
     resourceDomainOverlayElement = document.getElementById("resourceDomainOverlay");
+    mapPixelPercentElement = document.getElementById("mapPixelPercent");
+    sheetPixelPercentElement = document.getElementById("sheetPixelPercent");
+    modPercentageElement = document.getElementById("modPercentage");
 
     resourceDomainsElement.appendChild(document.createElement("option"));
     for(var resourceDomain in mods){
@@ -87,8 +101,6 @@ function initialize() {
 
     document.getElementById("loading").style.display = "none";
 
-    resourceDomainOverlayElement.style.top = -sheet.height;
-    resourceDomainOverlayElement.style.left = sheet.left;
     resourceDomainOverlayElement.width = sheet.width;
     resourceDomainOverlayElement.height = sheet.height;
 
@@ -127,6 +139,10 @@ function onMouseMove(eventInfo) {
                 fastdom.mutate(function() {
                     nameElement.innerText = "";
                     sizeElement.innerText = "";
+                    resourceDomainElement.innerText = "";
+                    modNameElement.innerText = "";
+                    mapPixelPercentElement.innerText = "";
+                    sheetPixelPercentElement.innerText = "";
                     markerElement.style.display = "none";
                 });
 
@@ -157,6 +173,13 @@ function onMouseMove(eventInfo) {
                     markerElement.style.width = data.width-2;
                     markerElement.style.height = data.height-2;
                     markerElement.style.display = "block";
+
+                    var tilePixels = data.width * data.height;
+                    var usedMapPercent = Math.floor((tilePixels / totalUsedPixels) * 10000) / 100;
+                    var usedSheetPercent = Math.floor((tilePixels / totalSheetPixels) * 10000) / 100;
+
+                    mapPixelPercentElement.innerText = (usedMapPercent < 0.0001 ? "< 1" : usedMapPercent) + "%";
+                    sheetPixelPercentElement.innerText = (usedSheetPercent < 0.0001 ? "< 1" : usedSheetPercent) + "%";
                 });
             }
         } else {
@@ -165,7 +188,12 @@ function onMouseMove(eventInfo) {
             fastdom.mutate(function() {
                 nameElement.innerText = "";
                 sizeElement.innerText = "";
+                resourceDomainElement.innerText = "";
+                modNameElement.innerText = "";
+                mapPixelPercentElement.innerText = "";
+                sheetPixelPercentElement.innerText = "";
                 markerElement.style.display = "none";
+
             });
             lastCell = -1;
         }
@@ -216,6 +244,11 @@ function highlightResourceDomain() {
             var tile = textureData[mod.tiles[i]];
             ctx.clearRect(tile.x, tile.y, tile.width, tile.height);
         }
+
+        var usedMapPercent = Math.floor((mod.totalTilePixels / totalUsedPixels) * 10000) / 100;
+        modPercentageElement.innerText = usedMapPercent + "% of map";
+    } else {
+        modPercentageElement.innerText = "";
     }
 }
 
@@ -230,7 +263,7 @@ function onTextureLoaded() {
         if (textureData[i].name == "minecraft:blocks/dirt") {
             backgroundImage = textureData[i];
         }
-        if (textureData[i].name == "minecraft:blocks/sandstone_smooth") {
+        if (textureData[i].name == "minecraft:blocks/sand") {
             atlasBackgroundImage = textureData[i];
         }
         if (textureData[i].name == "minecraft:blocks/grass_side") {
