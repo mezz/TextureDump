@@ -32,7 +32,9 @@ public class TextureInfoDumper {
 
 		for (int level = 0; level <= mipmapLevels; level++) {
 			final String filename = name + "_mipmap_" + level;
-			File output = new File(outputFolder, filename + ".html");
+			final String statisticsFile = name + "_mod_statistics";
+			File htmlFile = new File(outputFolder, filename + ".html");
+			File dataFile = new File(outputFolder, filename + ".js");
 			progressBar.step(filename);
 
 			StringWriter out = new StringWriter();
@@ -62,25 +64,34 @@ public class TextureInfoDumper {
 				jsonWriter.close();
 				out.close();
 
-				String webPage = getResourceAsString("page.html");
-				String textureJson = out.toString();
-				webPage = webPage.replaceFirst("\\[textureData\\]", textureJson);
-				webPage = webPage.replaceFirst("\\[textureName\\]", filename);
+				FileWriter fileWriter;
+				fileWriter = new FileWriter(dataFile);
+				fileWriter.write("var textureData = \n//Start of Data\n" + out.toString());
+				fileWriter.close();
 
-				FileWriter fileWriter = new FileWriter(output);
+				String webPage = getResourceAsString("page.html");
+				webPage = webPage.replaceAll("\\[statisticsFile\\]", statisticsFile);
+				webPage = webPage.replaceAll("\\[textureName\\]", filename);
+
+				fileWriter = new FileWriter(htmlFile);
 				fileWriter.write(webPage);
 				fileWriter.close();
 
-				writeFileFromResource(outputFolder, "fastdom.min.js");
-				writeFileFromResource(outputFolder, "texturedump.js");
-				writeFileFromResource(outputFolder, "texturedump.css");
-				writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
-
-				Log.info("Exported html to: {}", output.getAbsolutePath());
+				Log.info("Exported html to: {}", htmlFile.getAbsolutePath());
 			} catch (IOException e) {
 				Log.error("Failed to save texture info.", e);
 			}
+
 			ProgressManager.pop(progressBar2);
+		}
+
+		try {
+			writeFileFromResource(outputFolder, "fastdom.min.js");
+			writeFileFromResource(outputFolder, "texturedump.js");
+			writeFileFromResource(outputFolder, "texturedump.css");
+			writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
+		} catch (IOException e) {
+			Log.error("Failed to save additional page files.", e);
 		}
 
 		ProgressManager.pop(progressBar);
