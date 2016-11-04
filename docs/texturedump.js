@@ -249,15 +249,11 @@ function onTextureLoaded() {
     initialize();
 
     var backgroundImage;
-    var atlasBackgroundImage;
     var headerBackgroundImage;
 
     for (var i = 0; i < textureData.length; i++) {
         if (textureData[i].name == "minecraft:blocks/dirt") {
             backgroundImage = textureData[i];
-        }
-        if (textureData[i].name == "minecraft:blocks/sand") {
-            atlasBackgroundImage = textureData[i];
         }
         if (textureData[i].name == "minecraft:blocks/grass_side") {
             headerBackgroundImage = textureData[i];
@@ -299,18 +295,6 @@ function onTextureLoaded() {
             ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
             dataUrl = bgCanvas.toDataURL();
             document.getElementById("header").style.backgroundImage = "url(" + dataUrl + ")";
-
-            //Create sandstone for atlas background
-            ctx.globalAlpha = 1;
-            ctx.drawImage(sourceImageElement,
-                atlasBackgroundImage.x, atlasBackgroundImage.y, atlasBackgroundImage.width, atlasBackgroundImage.height,
-                0, 0, bgCanvas.width, bgCanvas.height
-            );
-            ctx.globalAlpha = 0.8;
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-            dataUrl = bgCanvas.toDataURL();
-            document.getElementById("sheetContainer").style.backgroundImage = "url(" + dataUrl + ")";
 
             //Create grass header
             ctx.globalAlpha = 1;
