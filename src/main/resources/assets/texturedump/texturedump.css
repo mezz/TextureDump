@@ -107,7 +107,7 @@ a:hover, a:active {
     margin-top: 1em;
     height: calc(100% - 9em);
     position: absolute;
-    overflow: scroll;
+    overflow: auto;
 }
 
 #headerContainer {
