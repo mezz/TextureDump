@@ -4,6 +4,8 @@
     <script lang="JavaScript" src="texturedump.js" type="application/javascript"></script>
     <link rel="stylesheet" href="texturedump.css" type="text/css"/>
     <link rel="stylesheet" href="texturedump.backgrounds.css" type="text/css"/>
+    <!-- Create a custom.css file to override backgrounds, etc. TextureDump will not overwrite this -->
+    <link rel="stylesheet" href="custom.css" type="text/css"/>
     <script lang="JavaScript" src="textures_mipmap_0.js" type="application/javascript"></script>
     <script lang="JavaScript" src="textures_mod_statistics.js" type="application/javascript"></script>
 </head>
@@ -38,8 +40,6 @@
 </div>
 
 <div class="infoPanel shadowText">
-    <div class="fieldHeader">Resource Domain: </div>
-    <div id="resourceDomain" class="field"></div>
     <div class="fieldHeader">Mod Name: </div>
     <div id="modName" class="field"></div>
     <div class="fieldHeader">Size: </div>
@@ -47,8 +47,6 @@
     <canvas id="singleImage"></canvas>
     <div class="fieldHeader">% of Texture Map</div>
     <div id="mapPixelPercent" class="field"></div>
-    <div class="fieldHeader">% of Sheet</div>
-    <div id="sheetPixelPercent" class="field"></div>
 
     <div id="debug" class="field"></div>
 </div>

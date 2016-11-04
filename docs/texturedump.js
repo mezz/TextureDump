@@ -139,7 +139,6 @@ function onMouseMove(eventInfo) {
                 fastdom.mutate(function() {
                     nameElement.innerText = "";
                     sizeElement.innerText = "";
-                    resourceDomainElement.innerText = "";
                     modNameElement.innerText = "";
                     mapPixelPercentElement.innerText = "";
                     sheetPixelPercentElement.innerText = "";
@@ -163,9 +162,8 @@ function onMouseMove(eventInfo) {
                 var modName = mods[resourceDomain].modName;
 
                 fastdom.mutate(function() {
-                    resourceDomainElement.innerText = resourceDomain;
                     modNameElement.innerText = modName;
-                    nameElement.innerText = data.name.substring(data.name.indexOf(":") + 1);
+                    nameElement.innerText = data.name;
                     sizeElement.innerText = data.width + " x " + data.height;
 
                     markerElement.style.top = data.y + targetTop;
@@ -176,10 +174,7 @@ function onMouseMove(eventInfo) {
 
                     var tilePixels = data.width * data.height;
                     var usedMapPercent = Math.floor((tilePixels / totalUsedPixels) * 10000) / 100;
-                    var usedSheetPercent = Math.floor((tilePixels / totalSheetPixels) * 10000) / 100;
-
-                    mapPixelPercentElement.innerText = (usedMapPercent < 0.0001 ? "< 1" : usedMapPercent) + "%";
-                    sheetPixelPercentElement.innerText = (usedSheetPercent < 0.0001 ? "< 1" : usedSheetPercent) + "%";
+                    mapPixelPercentElement.innerText = (usedMapPercent < 0.01 ? "< 1" : usedMapPercent) + "%";
                 });
             }
         } else {
@@ -188,10 +183,8 @@ function onMouseMove(eventInfo) {
             fastdom.mutate(function() {
                 nameElement.innerText = "";
                 sizeElement.innerText = "";
-                resourceDomainElement.innerText = "";
                 modNameElement.innerText = "";
                 mapPixelPercentElement.innerText = "";
-                sheetPixelPercentElement.innerText = "";
                 markerElement.style.display = "none";
 
             });
