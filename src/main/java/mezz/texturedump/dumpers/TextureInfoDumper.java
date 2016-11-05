@@ -90,6 +90,7 @@ public class TextureInfoDumper {
 			writeFileFromResource(outputFolder, "texturedump.js");
 			writeFileFromResource(outputFolder, "texturedump.css");
 			writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
+			writeFileFromResource(outputFolder, "bg.png");
 		} catch (IOException e) {
 			Log.error("Failed to save additional page files.", e);
 		}

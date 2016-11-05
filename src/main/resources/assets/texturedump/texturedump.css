@@ -41,14 +41,18 @@ a:hover, a:active {
     text-shadow: 1px 1px 1px rgba(150, 150, 150, 1);
 }
 
-.highlightSection {
+.options {
     align-self: flex-end;
-    margin-right: 1em;
-    margin-bottom: 1em;
-    min-width: 7em;
+    min-width: 16em;
 }
 
-.highlightSection select {
+.options div {
+    float: right;
+    max-width: 7em;
+    margin-right: 1em;
+}
+
+.options select {
     margin-top: 5px;
     width: 100%;
 }
@@ -91,14 +95,19 @@ a:hover, a:active {
     left: 0px;
 }
 
-#singleImage {
+#singleImageContainer {
+    display: inline-block;
     margin-top: 1em;
     margin-bottom: 1em;
-    width: 256px;
-    height: 256px;
     -webkit-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
     -moz-box-shadow: 0 0 12px 5px rgba(75,54,37,1);
     box-shadow: 0 0 12px 5px rgba(75,54,37,1);
+    background: #808080;
+}
+
+#singleImage {
+    width: 256px;
+    height: 256px;
 }
 
 #sheetContainer {
@@ -107,7 +116,7 @@ a:hover, a:active {
     margin-top: 1em;
     height: calc(100% - 9em);
     position: absolute;
-    overflow: scroll;
+    overflow: auto;
 }
 
 #headerContainer {
