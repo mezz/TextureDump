@@ -22,12 +22,19 @@
 
         <div id="loading"><h1>Loading...</h1></div>
 
-        <div class="highlightSection">
-            <div>
+        <div class="options">
+            <div class="highlightSection">
                 <div class="shadowText">Highlight</div>
                 <select id="resourceDomains" onchange="highlightResourceDomain()"></select>
                 <div class="shadowText smaller" id="modPercentage">
                 </div>
+            </div>
+            <div class="backgroundSection">
+                <div class="shadowText">Background</div>
+                <select id="backgroundTypes" onchange="updateBackground()">
+                    <option value="rgba(119,119,119,1)">Gray</option>
+                    <option value="url(bg.png)">Checkerboard</option>
+                </select>
             </div>
         </div>
     </div>
@@ -44,7 +51,9 @@
     <div id="modName" class="field"></div>
     <div class="fieldHeader">Size: </div>
     <div id="size" class="field"></div>
-    <canvas id="singleImage"></canvas>
+    <div id="singleImageContainer">
+        <canvas id="singleImage"></canvas>
+    </div>
     <div class="fieldHeader">% of Texture Map</div>
     <div id="mapPixelPercent" class="field"></div>
 

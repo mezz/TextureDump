@@ -11,10 +11,12 @@ var nameElement;
 var sizeElement;
 var markerElement;
 var imageElement;
+var imageContainerElement;
 var sourceImageElement;
 var debugElement;
 var resourceDomainsElement;
 var resourceDomainOverlayElement;
+var backgroundTypesElement;
 var modNameElement;
 var mapPixelPercentElement;
 var sheetPixelPercentElement;
@@ -82,9 +84,11 @@ function initialize() {
     sizeElement = document.getElementById("size");
     markerElement = document.getElementById("marker");
     imageElement = document.getElementById("singleImage");
+    imageContainerElement = document.getElementById("singleImageContainer");
     debugElement = document.getElementById("debug");
     sourceImageElement = document.getElementById("sheet");
     resourceDomainsElement = document.getElementById("resourceDomains");
+    backgroundTypesElement = document.getElementById("backgroundTypes");
     resourceDomainOverlayElement = document.getElementById("resourceDomainOverlay");
     mapPixelPercentElement = document.getElementById("mapPixelPercent");
     sheetPixelPercentElement = document.getElementById("sheetPixelPercent");
@@ -203,9 +207,6 @@ function updateSingleImage(data) {
     ctx.imageSmoothingEnabled = false;
 
     ctx.clearRect(0, 0, imageElementWidth, imageElementHeight);
-    ctx.globalOpacity = 0.2;
-    ctx.fillStyle = "rgba(119,119,119,1)";
-    ctx.fillRect(0, 0, imageElementWidth, imageElementHeight);
 
     if (data != null) {
         ctx.globalOpacity = 1;
@@ -243,6 +244,11 @@ function highlightResourceDomain() {
     } else {
         modPercentageElement.innerText = "";
     }
+}
+
+function updateBackground() {
+    sourceImageElement.style.background = backgroundTypesElement.value;
+    imageContainerElement.style.background = backgroundTypesElement.value;
 }
 
 function onTextureLoaded() {
