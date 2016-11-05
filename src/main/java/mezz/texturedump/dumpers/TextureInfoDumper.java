@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Set;
@@ -20,6 +21,7 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ProgressManager;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 public class TextureInfoDumper {
@@ -90,7 +92,9 @@ public class TextureInfoDumper {
 			writeFileFromResource(outputFolder, "texturedump.js");
 			writeFileFromResource(outputFolder, "texturedump.css");
 			writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
-			writeFileFromResource(outputFolder, "bg.png");
+
+			URL bg = TextureInfoDumper.class.getResource("/assets/texturedump/bg.png");
+			FileUtils.copyURLToFile(bg, new File(outputFolder, "bg.png"));
 		} catch (IOException e) {
 			Log.error("Failed to save additional page files.", e);
 		}
