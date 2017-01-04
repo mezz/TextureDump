@@ -19,7 +19,13 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@Mod(modid = TextureDump.MODID, name = "Texture Dump", version = TextureDump.VERSION, clientSideOnly = true)
+@Mod(
+		modid = TextureDump.MODID,
+		name = "Texture Dump",
+		version = TextureDump.VERSION,
+		acceptedMinecraftVersions = "[1.10,1.11.2]",
+		clientSideOnly = true
+)
 public class TextureDump {
 	public static final String MODID = "texturedump";
 	public static final String VERSION = "@VERSION@";
