@@ -21,9 +21,13 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ProgressManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+@SideOnly(Side.CLIENT)
 public class TextureInfoDumper {
 	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) {
 		Set<String> animatedTextures = map.listAnimatedSprites.stream()

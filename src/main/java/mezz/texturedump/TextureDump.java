@@ -18,12 +18,14 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod(
 		modid = TextureDump.MODID,
 		name = "Texture Dump",
 		version = TextureDump.VERSION,
-		acceptedMinecraftVersions = "[1.10,1.11.2]",
+		acceptedMinecraftVersions = "[1.10,1.12]",
 		clientSideOnly = true
 )
 public class TextureDump {
@@ -37,6 +39,7 @@ public class TextureDump {
 	}
 
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public void onMainMenuOpen(GuiOpenEvent event) {
 		if (!dumped && event.getGui() instanceof GuiMainMenu) {
 			dumped = true;
@@ -51,6 +54,7 @@ public class TextureDump {
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
 	private void dumpTextureMap(TextureMap map, String name) {
 		int mip = map.getMipmapLevels();
 		File outputFolder = new File("texture_dump");
