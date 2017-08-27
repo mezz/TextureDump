@@ -25,7 +25,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 		modid = TextureDump.MODID,
 		name = "Texture Dump",
 		version = TextureDump.VERSION,
-		acceptedMinecraftVersions = "[1.10,1.12]",
+		acceptedMinecraftVersions = "[1.10,1.13)",
 		clientSideOnly = true
 )
 public class TextureDump {
