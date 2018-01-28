@@ -12,10 +12,12 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -31,31 +33,50 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class TextureDump {
 	public static final String MODID = "texturedump";
 	public static final String VERSION = "@VERSION@";
-	private boolean dumped = false;
+	private boolean mainMenuOpened = false;
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
+	@Mod.EventHandler
+	public void onLoadComplete(FMLLoadCompleteEvent event) {
+		if (event.getSide() == Side.CLIENT) {
+			// Reload when resources change
+			Minecraft minecraft = Minecraft.getMinecraft();
+			IReloadableResourceManager reloadableResourceManager = (IReloadableResourceManager) minecraft.getResourceManager();
+			reloadableResourceManager.registerReloadListener(resourceManager -> {
+				if (mainMenuOpened) { // only reload when the player requests it in-game
+					dumpTextureMaps();
+				}
+			});
+		}
+	}
+
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onMainMenuOpen(GuiOpenEvent event) {
-		if (!dumped && event.getGui() instanceof GuiMainMenu) {
-			dumped = true;
-			TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-			for (Map.Entry<ResourceLocation, ITextureObject> entry : textureManager.mapTextureObjects.entrySet()) {
-				ITextureObject textureObject = entry.getValue();
-				if (textureObject instanceof TextureMap) {
-					String name = entry.getKey().toString().replace(':', '_').replace('/', '_');
-					dumpTextureMap((TextureMap) textureObject, name);
-				}
+		if (!mainMenuOpened && event.getGui() instanceof GuiMainMenu) {
+			mainMenuOpened = true;
+			dumpTextureMaps();
+		}
+	}
+
+	@SideOnly(Side.CLIENT)
+	private static void dumpTextureMaps() {
+		TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
+		for (Map.Entry<ResourceLocation, ITextureObject> entry : textureManager.mapTextureObjects.entrySet()) {
+			ITextureObject textureObject = entry.getValue();
+			if (textureObject instanceof TextureMap) {
+				String name = entry.getKey().toString().replace(':', '_').replace('/', '_');
+				dumpTextureMap((TextureMap) textureObject, name);
 			}
 		}
 	}
 
 	@SideOnly(Side.CLIENT)
-	private void dumpTextureMap(TextureMap map, String name) {
+	private static void dumpTextureMap(TextureMap map, String name) {
 		int mip = map.getMipmapLevels();
 		File outputFolder = new File("texture_dump");
 		if (!outputFolder.exists()) {
