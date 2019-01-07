@@ -1,6 +1,7 @@
 package mezz.texturedump.dumpers;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,27 +12,25 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import com.google.gson.stream.JsonWriter;
+
 import mezz.texturedump.TextureDump;
 import mezz.texturedump.util.Log;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.resources.IResource;
-import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.resources.IResource;
+import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ProgressManager;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-@SideOnly(Side.CLIENT)
 public class TextureInfoDumper {
 	public static void saveTextureInfo(String name, TextureMap map, int mipmapLevels, File outputFolder) {
-		Set<String> animatedTextures = map.listAnimatedSprites.stream()
-				.map(TextureAtlasSprite::getIconName)
+		Set<ResourceLocation> animatedTextures = map.listAnimatedSprites.stream()
+				.map(TextureAtlasSprite::getName)
 				.collect(Collectors.toSet());
 
 		ProgressManager.ProgressBar progressBar = ProgressManager.push("Dumping TextureMap info to file", mipmapLevels + 1);
@@ -53,16 +52,16 @@ public class TextureInfoDumper {
 				jsonWriter.beginArray();
 				{
 					for (TextureAtlasSprite sprite : values) {
-						String iconName = sprite.getIconName();
-						progressBar2.step(iconName);
+						ResourceLocation iconName = sprite.getName();
+						progressBar2.step(iconName.toString());
 						boolean animated = animatedTextures.contains(iconName);
 						jsonWriter.beginObject()
-								.name("name").value(iconName)
+								.name("name").value(iconName.toString())
 								.name("animated").value(animated)
-								.name("x").value(sprite.getOriginX() / (1 << level))
-								.name("y").value(sprite.getOriginY() / (1 << level))
-								.name("width").value(sprite.getIconWidth() / (1 << level))
-								.name("height").value(sprite.getIconHeight() / (1 << level))
+								.name("x").value(sprite.getUnInterpolatedU(0) / (1 << level))
+								.name("y").value(sprite.getUnInterpolatedV(0) / (1 << level))
+								.name("width").value(sprite.getWidth() / (1 << level))
+								.name("height").value(sprite.getHeight() / (1 << level))
 								.endObject();
 					}
 				}
@@ -96,9 +95,10 @@ public class TextureInfoDumper {
 			writeFileFromResource(outputFolder, "texturedump.js");
 			writeFileFromResource(outputFolder, "texturedump.css");
 			writeFileFromResource(outputFolder, "texturedump.backgrounds.css");
-
-			URL bg = TextureInfoDumper.class.getResource("/assets/texturedump/bg.png");
-			FileUtils.copyURLToFile(bg, new File(outputFolder, "bg.png"));
+			IResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+			final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, "bg.png"));
+			final InputStream inputStream = resource.getInputStream();
+			IOUtils.copy(inputStream, new FileOutputStream(new File(outputFolder, "bg.png")));
 		} catch (IOException e) {
 			Log.error("Failed to save additional page files.", e);
 		}
@@ -114,7 +114,7 @@ public class TextureInfoDumper {
 	}
 
 	private static String getResourceAsString(String resourceName) throws IOException {
-		IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+		IResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
 		final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MODID, resourceName));
 		final InputStream inputStream = resource.getInputStream();
 		StringWriter writer = new StringWriter();

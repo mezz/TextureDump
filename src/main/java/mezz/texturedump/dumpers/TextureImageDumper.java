@@ -1,21 +1,19 @@
 package mezz.texturedump.dumpers;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.IntBuffer;
 
-import mezz.texturedump.util.Log;
-import net.minecraftforge.fml.common.ProgressManager;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-@SideOnly(Side.CLIENT)
+import mezz.texturedump.util.Log;
+import net.minecraftforge.fml.common.ProgressManager;
+
 public class TextureImageDumper {
 	public static void saveGlTexture(String name, int textureId, int mipmapLevels, File outputFolder) {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);

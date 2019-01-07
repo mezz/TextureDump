@@ -12,50 +12,43 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.javafmlmod.FMLModLoadingContext;
 
-@Mod(
-		modid = TextureDump.MODID,
-		name = "Texture Dump",
-		version = TextureDump.VERSION,
-		acceptedMinecraftVersions = "[1.10,1.13)",
-		clientSideOnly = true
-)
+@Mod(value = "texturedump")
 public class TextureDump {
 	public static final String MODID = "texturedump";
 	public static final String VERSION = "@VERSION@";
 	private boolean mainMenuOpened = false;
+	
+	public TextureDump() {
+        FMLModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
 
-	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-		MinecraftForge.EVENT_BUS.register(this);
+        // Register ourselves for server, registry and other game events we are interested in
+        MinecraftForge.EVENT_BUS.register(this);
 	}
 
-	@Mod.EventHandler
-	public void onLoadComplete(FMLLoadCompleteEvent event) {
-		if (event.getSide() == Side.CLIENT) {
+	private void onLoadComplete(final FMLLoadCompleteEvent event) {
+//		if (event.get == Side.CLIENT) {
 			// Reload when resources change
-			Minecraft minecraft = Minecraft.getMinecraft();
+			Minecraft minecraft = Minecraft.getInstance();
 			IReloadableResourceManager reloadableResourceManager = (IReloadableResourceManager) minecraft.getResourceManager();
-			reloadableResourceManager.registerReloadListener(resourceManager -> {
+			reloadableResourceManager.addReloadListener(resourceManager -> {
 				if (mainMenuOpened) { // only reload when the player requests it in-game
 					dumpTextureMaps();
 				}
 			});
-		}
+//		}
 	}
 
 	@SubscribeEvent
-	@SideOnly(Side.CLIENT)
 	public void onMainMenuOpen(GuiOpenEvent event) {
 		if (!mainMenuOpened && event.getGui() instanceof GuiMainMenu) {
 			mainMenuOpened = true;
@@ -63,9 +56,8 @@ public class TextureDump {
 		}
 	}
 
-	@SideOnly(Side.CLIENT)
 	private static void dumpTextureMaps() {
-		TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
+		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 		for (Map.Entry<ResourceLocation, ITextureObject> entry : textureManager.mapTextureObjects.entrySet()) {
 			ITextureObject textureObject = entry.getValue();
 			if (textureObject instanceof TextureMap) {
@@ -75,7 +67,6 @@ public class TextureDump {
 		}
 	}
 
-	@SideOnly(Side.CLIENT)
 	private static void dumpTextureMap(TextureMap map, String name) {
 		int mip = map.getMipmapLevels();
 		File outputFolder = new File("texture_dump");
