@@ -9,7 +9,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = version_major + '.' + version_minor
+version = version_major + '.' + version_minor + '.' + version_patch
 group= "mezz.texturedump"
 archivesBaseName = "texturedump_" + mcversion
 

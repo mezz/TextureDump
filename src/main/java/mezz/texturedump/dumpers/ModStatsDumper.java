@@ -36,7 +36,7 @@ public class ModStatsDumper {
 	public void saveModStats(String name, TextureMap map, File outputFolder) {
 		Map<String, Long> modPixelCounts = map.mapUploadedSprites.values().stream()
 				.collect(Collectors.groupingBy(
-						sprite -> new ResourceLocation(sprite.getIconName()).getResourceDomain(),
+						sprite -> new ResourceLocation(sprite.getIconName()).getNamespace(),
 						Collectors.summingLong(sprite -> sprite.getIconWidth() * sprite.getIconHeight()))
 				);
 
