@@ -1,18 +1,17 @@
 package mezz.texturedump.dumpers;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.IntBuffer;
 
-import javax.imageio.ImageIO;
+import net.minecraftforge.fml.common.progress.StartupProgressManager;
 
+import mezz.texturedump.util.Log;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-
-import mezz.texturedump.util.Log;
-import net.minecraftforge.fml.common.ProgressManager;
 
 public class TextureImageDumper {
 	public static void saveGlTexture(String name, int textureId, int mipmapLevels, File outputFolder) {
@@ -21,33 +20,31 @@ public class TextureImageDumper {
 		GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
 		GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
 
-		ProgressManager.ProgressBar progressBar = ProgressManager.push("Dumping TextureMap to file", mipmapLevels + 1);
+		StartupProgressManager.start("Dumping TextureMap to file", mipmapLevels + 1, progressBar -> {
+			for (int level = 0; level <= mipmapLevels; level++) {
+				int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
+				int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
+				int size = width * height;
 
-		for (int level = 0; level <= mipmapLevels; level++) {
-			int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
-			int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
-			int size = width * height;
+				BufferedImage bufferedimage = new BufferedImage(width, height, 2);
+				String fileName = name + "_mipmap_" + level + ".png";
+				progressBar.step(fileName);
 
-			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
-			String fileName = name + "_mipmap_" + level + ".png";
-			progressBar.step(fileName);
+				File output = new File(outputFolder, fileName);
+				IntBuffer buffer = BufferUtils.createIntBuffer(size);
+				int[] data = new int[size];
 
-			File output = new File(outputFolder, fileName);
-			IntBuffer buffer = BufferUtils.createIntBuffer(size);
-			int[] data = new int[size];
+				GL11.glGetTexImage(GL11.GL_TEXTURE_2D, level, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+				buffer.get(data);
+				bufferedimage.setRGB(0, 0, width, height, data, 0, width);
 
-			GL11.glGetTexImage(GL11.GL_TEXTURE_2D, level, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
-			buffer.get(data);
-			bufferedimage.setRGB(0, 0, width, height, data, 0, width);
-
-			try {
-				ImageIO.write(bufferedimage, "png", output);
-				Log.info("Exported png to: {}", output.getAbsolutePath());
-			} catch (IOException ioexception) {
-				Log.info("Unable to write: ", ioexception);
+				try {
+					ImageIO.write(bufferedimage, "png", output);
+					Log.info("Exported png to: {}", output.getAbsolutePath());
+				} catch (IOException ioexception) {
+					Log.info("Unable to write: ", ioexception);
+				}
 			}
-		}
-
-		ProgressManager.pop(progressBar);
+		});
 	}
 }

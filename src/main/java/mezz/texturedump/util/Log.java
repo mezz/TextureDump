@@ -27,6 +27,6 @@ public class Log {
 	}
 
 	private static void log(Level logLevel, String message, Object... params) {
-		LogManager.getLogger(TextureDump.MODID).log(logLevel, message, params);
+		LogManager.getLogger(TextureDump.MOD_ID).log(logLevel, message, params);
 	}
 }

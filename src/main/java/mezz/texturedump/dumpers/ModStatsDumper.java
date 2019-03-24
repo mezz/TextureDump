@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.gson.stream.JsonWriter;
-
-import mezz.texturedump.util.Log;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.ProgressManager;
-import net.minecraftforge.fml.language.IModInfo;
+import net.minecraftforge.fml.common.progress.StartupProgressManager;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraft.client.renderer.texture.TextureMap;
+
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.google.gson.stream.JsonWriter;
+import mezz.texturedump.util.Log;
 
 public class ModStatsDumper {
 
@@ -36,53 +37,71 @@ public class ModStatsDumper {
 				.sorted(Collections.reverseOrder(Comparator.comparing(Map.Entry::getValue)))
 				.collect(Collectors.toList());
 
-		ProgressManager.ProgressBar progressBar = ProgressManager.push("Dumping Mod TextureMap Statistics", sortedEntries.size());
+		StartupProgressManager.start("Dumping Mod TextureMap Statistics", sortedEntries.size(), progressBar -> {
+			try {
+				FileWriter fileWriter = new FileWriter(output);
+				fileWriter.write("var modStatistics = \n//Start of Data\n");
+				JsonWriter jsonWriter = new JsonWriter(fileWriter);
+				jsonWriter.setIndent("    ");
+				jsonWriter.beginArray();
+				{
+					for (Map.Entry<String, Long> modPixels : sortedEntries) {
+						String resourceDomain = modPixels.getKey();
+						progressBar.step(resourceDomain);
 
-		try {
-			FileWriter fileWriter = new FileWriter(output);
-			fileWriter.write("var modStatistics = \n//Start of Data\n");
-			JsonWriter jsonWriter = new JsonWriter(fileWriter);
-			jsonWriter.setIndent("    ");
-			jsonWriter.beginArray();
-			{
-				for (Map.Entry<String, Long> modPixels : sortedEntries) {
-					String resourceDomain = modPixels.getKey();
-					progressBar.step(resourceDomain);
+						long pixelCount = modPixels.getValue();
+						IModInfo metadata = getModMetadata(resourceDomain);
+						UnmodifiableConfig modConfig = metadata.getModConfig();
 
-					long pixelCount = modPixels.getValue();
-					IModInfo metadata = getModMetadata(resourceDomain);
-
-					jsonWriter.beginObject()
+						jsonWriter.beginObject()
 							.name("resourceDomain").value(resourceDomain)
 							.name("pixelCount").value(pixelCount)
 							.name("percentOfTextureMap").value(pixelCount * 100f / totalPixels)
 							.name("modName").value(metadata.getDisplayName())
-							.name("url").value("");
+							.name("url").value(getModConfigValue(modConfig, "displayURL"))
+							.name("issueTrackerUrl").value(getModConfigValue(modConfig, "issueTrackerURL"));
 
-					jsonWriter.name("authors").beginArray();
-/*					for (String author : metadata.get) {
-						jsonWriter.value(author);
-					}*/
-					jsonWriter.endArray();
+						jsonWriter.name("authors").beginArray();
+						{
+							String authors = getModConfigValue(modConfig, "authors");
+							if (!authors.isEmpty()) {
+								String[] authorList = authors.split(",");
+								for (String author : authorList) {
+									jsonWriter.value(author.trim());
+								}
+							}
+						}
+						jsonWriter.endArray();
 
-					jsonWriter.endObject();
+						jsonWriter.endObject();
+					}
+
 				}
+				jsonWriter.endArray();
+				jsonWriter.close();
+				fileWriter.close();
 
+				Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
+			} catch (IOException e) {
+				Log.error("Failed to save mod statistics info.", e);
 			}
-			jsonWriter.endArray();
-			jsonWriter.close();
-			fileWriter.close();
+		});
+	}
 
-			Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
-		} catch (IOException e) {
-			Log.error("Failed to save mod statistics info.", e);
-		}
-
-		ProgressManager.pop(progressBar);
+	private static String getModConfigValue(UnmodifiableConfig modConfig, String key) {
+		return modConfig.getOptional(key)
+			.filter(value -> value instanceof String)
+			.map(value -> (String) value)
+			.orElse("");
 	}
 
 	private IModInfo getModMetadata(String resourceDomain) {
-		ModInfo mod = ModList.get().getMods().stream().filter(m -> m.getModId().equals(resourceDomain)).findFirst().orElse(null);
+		ModList modList = ModList.get();
+		List<ModInfo> mods = modList.getMods();
+		ModInfo mod = mods.stream()
+			.filter(m -> m.getModId().equals(resourceDomain))
+			.findFirst()
+			.orElse(null);
 		if (mod == null) {
 			throw new IllegalArgumentException();
 		} else {
