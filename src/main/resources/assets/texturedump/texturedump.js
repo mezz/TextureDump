@@ -210,9 +210,18 @@ function updateSingleImage(data) {
 
     if (data != null) {
         ctx.globalOpacity = 1;
+
+        var width = imageElementWidth;
+        var height = imageElementHeight;
+        if (data.width > data.height) {
+            height = imageElementHeight * (data.height / data.width);
+        } else if (data.width < data.height) {
+            width = imageElementWidth * (data.width / data.height);
+        }
+
         ctx.drawImage(sourceImageElement,
             data.x, data.y, data.width, data.height,
-            0, 0, imageElementWidth, imageElementHeight
+            0, 0, width, height
         );
     }
 }
