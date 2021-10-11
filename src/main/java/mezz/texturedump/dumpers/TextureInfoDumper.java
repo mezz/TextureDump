@@ -1,10 +1,9 @@
 package mezz.texturedump.dumpers;
 
 import com.google.gson.stream.JsonWriter;
-import mezz.texturedump.TextureDump;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.StartupMessageManager;
 
 import java.io.File;
@@ -14,15 +13,9 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TextureInfoDumper {
-	public static List<File> saveTextureInfoDataFiles(String name, AtlasTexture map, int mipmapLevels, File outputFolder) throws IOException {
-		Set<ResourceLocation> animatedTextures = map.listAnimatedSprites.stream()
-				.map(TextureAtlasSprite::getName)
-				.collect(Collectors.toSet());
-
+	public static List<File> saveTextureInfoDataFiles(String name, TextureAtlas map, int mipmapLevels, File outputFolder) throws IOException {
 		StartupMessageManager.addModMessage("Dumping TextureMap info to file");
 
 		List<File> dataFiles = new ArrayList<>();
@@ -34,14 +27,14 @@ public class TextureInfoDumper {
 			JsonWriter jsonWriter = new JsonWriter(out);
 			jsonWriter.setIndent("    ");
 
-			Collection<TextureAtlasSprite> values = map.mapUploadedSprites.values();
+			Collection<TextureAtlasSprite> values = map.texturesByName.values();
 			StartupMessageManager.addModMessage("Mipmap Level " + level);
 
 			jsonWriter.beginArray();
 			{
 				for (TextureAtlasSprite sprite : values) {
 					ResourceLocation iconName = sprite.getName();
-					boolean animated = animatedTextures.contains(iconName);
+					boolean animated = (sprite.getAnimationTicker() != null);
 					jsonWriter.beginObject()
 							.name("name").value(iconName.toString())
 							.name("animated").value(animated)

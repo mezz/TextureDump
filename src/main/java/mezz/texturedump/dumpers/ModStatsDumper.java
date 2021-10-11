@@ -1,12 +1,13 @@
 package mezz.texturedump.dumpers;
 
 import com.google.gson.stream.JsonWriter;
-import mezz.texturedump.util.Log;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.StartupMessageManager;
-import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -18,9 +19,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ModStatsDumper {
+	private static final Logger LOGGER = LogManager.getLogger();
 
-	public File saveModStats(String name, AtlasTexture map, File modStatsDir) throws IOException {
-		Map<String, Long> modPixelCounts = map.mapUploadedSprites.values().stream()
+	public File saveModStats(String name, TextureAtlas map, File modStatsDir) throws IOException {
+		Map<String, Long> modPixelCounts = map.texturesByName.values().stream()
 				.collect(Collectors.groupingBy(
 						sprite -> sprite.getName().getNamespace(),
 						Collectors.summingLong(sprite -> (long) sprite.getWidth() * sprite.getHeight()))
@@ -52,7 +54,7 @@ public class ModStatsDumper {
 		jsonWriter.close();
 		fileWriter.close();
 
-		Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
+		LOGGER.info("Saved mod statistics to {}.", output.getAbsoluteFile());
 		return output;
 	}
 
@@ -98,10 +100,13 @@ public class ModStatsDumper {
 	@Nullable
 	private static IModInfo getModMetadata(String resourceDomain) {
 		ModList modList = ModList.get();
-		List<ModInfo> mods = modList.getMods();
-		return mods.stream()
-			.filter(m -> m.getModId().equals(resourceDomain))
-			.findFirst()
-			.orElse(null);
+		IModFileInfo modFileInfo = modList.getModFileById(resourceDomain);
+		if (modFileInfo == null) {
+			return null;
+		}
+		return modFileInfo.getMods()
+				.stream()
+				.findFirst()
+				.orElse(null);
 	}
 }

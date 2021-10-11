@@ -8,15 +8,18 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import net.minecraftforge.fml.StartupMessageManager;
 
-import mezz.texturedump.util.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 public class TextureImageDumper {
+	private static final Logger LOGGER = LogManager.getLogger();
+
 	public static List<File> saveGlTextures(String name, int textureId, File texturesDir) throws IOException {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
@@ -27,20 +30,19 @@ public class TextureImageDumper {
 		int parentTextureHeight = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT);
 
 		int minimumSize = Math.min(parentTextureWidth, parentTextureHeight);
-		int mipmapLevels = MathHelper.log2(minimumSize);
+		int mipmapLevels = Mth.log2(minimumSize);
 
-		StartupMessageManager.addModMessage("Dumping TextureMap to file");
+		StartupMessageManager.addModMessage(String.format("Dumping TextureMap textures to file: %s", name));
 		List<File> textureFiles = new ArrayList<>();
 		for (int level = 0; level < mipmapLevels; level++) {
 			int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
 			int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
 			int size = width * height;
-
-			if (width == 0 || height == 0) {
-				return textureFiles;
+			if (size == 0) {
+				break;
 			}
 
-			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
+			BufferedImage bufferedimage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			File output = new File(texturesDir, name + "_mipmap_" + level + ".png");
 			IntBuffer buffer = BufferUtils.createIntBuffer(size);
 			int[] data = new int[size];
@@ -50,7 +52,7 @@ public class TextureImageDumper {
 			bufferedimage.setRGB(0, 0, width, height, data, 0, width);
 
 			ImageIO.write(bufferedimage, "png", output);
-			Log.info("Exported png to: {}", output.getAbsolutePath());
+			LOGGER.info("Exported png to: {}", output.getAbsolutePath());
 			textureFiles.add(output);
 		}
 		return textureFiles;

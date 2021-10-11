@@ -1,13 +1,14 @@
 package mezz.texturedump.dumpers;
 
-import mezz.texturedump.TextureDump;
-import mezz.texturedump.util.Log;
+import mezz.texturedump.Constants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.IResource;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraftforge.fml.StartupMessageManager;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,8 +20,10 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 public class ResourceWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static void writeFiles(String name, File outputFolder, File mipmapsDir, List<File> textureImageFiles, List<File> textureInfoJsFiles, File modStatsFile, File resourceDir, int mipmapLevels) throws IOException {
-        StartupMessageManager.addModMessage("Writing TextureMap resources to files");
+        StartupMessageManager.addModMessage("Writing TextureMap resources files");
 
         for (int level = 0; level < mipmapLevels; level++) {
             File textureInfoJsFile = textureInfoJsFiles.get(level);
@@ -44,7 +47,7 @@ public class ResourceWriter {
             htmlFileWriter.write(webPage);
             htmlFileWriter.close();
 
-            Log.info("Exported html to: {}", htmlFile.getAbsolutePath());
+            LOGGER.info("Exported html to: {}", htmlFile.getAbsolutePath());
         }
     }
 
@@ -53,8 +56,8 @@ public class ResourceWriter {
         writeFileFromResource(resourceDir, "texturedump.js");
         writeFileFromResource(resourceDir, "texturedump.css");
         writeFileFromResource(resourceDir, "texturedump.backgrounds.css");
-        IResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MOD_ID, "bg.png"));
+        ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, "bg.png"));
         final InputStream inputStream = resource.getInputStream();
         IOUtils.copy(inputStream, new FileOutputStream(new File(resourceDir, "bg.png")));
     }
@@ -67,8 +70,8 @@ public class ResourceWriter {
     }
 
     private static String getResourceAsString(String resourceName) throws IOException {
-        IResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        final IResource resource = resourceManager.getResource(new ResourceLocation(TextureDump.MOD_ID, resourceName));
+        ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, resourceName));
         final InputStream inputStream = resource.getInputStream();
         StringWriter writer = new StringWriter();
         IOUtils.copy(inputStream, writer, Charset.defaultCharset());
