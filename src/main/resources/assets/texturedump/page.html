@@ -1,13 +1,13 @@
 <html>
 <head>
-    <script lang="JavaScript" src="fastdom.min.js" type="application/javascript"></script>
-    <script lang="JavaScript" src="texturedump.js" type="application/javascript"></script>
-    <link rel="stylesheet" href="texturedump.css" type="text/css"/>
-    <link rel="stylesheet" href="texturedump.backgrounds.css" type="text/css"/>
+    <script lang="JavaScript" src="[resourceDir]/fastdom.min.js" type="application/javascript"></script>
+    <script lang="JavaScript" src="[resourceDir]/texturedump.js" type="application/javascript"></script>
+    <link rel="stylesheet" href="[resourceDir]/texturedump.css" type="text/css"/>
+    <link rel="stylesheet" href="[resourceDir]/texturedump.backgrounds.css" type="text/css"/>
     <!-- Create a custom.css file to override backgrounds, etc. TextureDump will not overwrite this -->
     <link rel="stylesheet" href="custom.css" type="text/css"/>
-    <script lang="JavaScript" src="[textureName].js" type="application/javascript"></script>
-    <script lang="JavaScript" src="[statisticsFile].js" type="application/javascript"></script>
+    <script lang="JavaScript" src="[textureInfo]" type="application/javascript"></script>
+    <script lang="JavaScript" src="[statisticsFile]" type="application/javascript"></script>
 </head>
 <body>
 
@@ -33,7 +33,7 @@
                 <div class="shadowText">Background</div>
                 <select id="backgroundTypes" onchange="updateBackground()">
                     <option value="rgba(119,119,119,1)">Gray</option>
-                    <option value="url(bg.png)">Checkerboard</option>
+                    <option value="url([resourceDir]/bg.png)">Checkerboard</option>
                 </select>
             </div>
         </div>
@@ -42,7 +42,7 @@
 
 <div id="sheetContainer">
     <div id="marker"></div>
-    <image id="sheet" src="[textureName].png"></image>
+    <image id="sheet" src="[textureImage]"></image>
     <canvas id="resourceDomainOverlay"></canvas>
 </div>
 

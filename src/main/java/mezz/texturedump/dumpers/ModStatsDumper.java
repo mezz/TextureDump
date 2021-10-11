@@ -8,6 +8,7 @@ import net.minecraftforge.fml.StartupMessageManager;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,86 +19,89 @@ import java.util.stream.Collectors;
 
 public class ModStatsDumper {
 
-	public void saveModStats(String name, AtlasTexture map, File outputFolder) {
+	public File saveModStats(String name, AtlasTexture map, File modStatsDir) throws IOException {
 		Map<String, Long> modPixelCounts = map.mapUploadedSprites.values().stream()
 				.collect(Collectors.groupingBy(
 						sprite -> sprite.getName().getNamespace(),
-						Collectors.summingLong(sprite -> sprite.getWidth() * sprite.getHeight()))
+						Collectors.summingLong(sprite -> (long) sprite.getWidth() * sprite.getHeight()))
 				);
 
 		final long totalPixels = modPixelCounts.values().stream().mapToLong(longValue -> longValue).sum();
 
 		final String filename = name + "_mod_statistics";
-		File output = new File(outputFolder, filename + ".js");
+		File output = new File(modStatsDir, filename + ".js");
 
 		List<Map.Entry<String, Long>> sortedEntries = modPixelCounts.entrySet().stream()
 				.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
 				.collect(Collectors.toList());
 
 		StartupMessageManager.addModMessage("Dumping Mod TextureMap Statistics");
-		try {
-			FileWriter fileWriter = new FileWriter(output);
-			fileWriter.write("var modStatistics = \n//Start of Data\n");
-			JsonWriter jsonWriter = new JsonWriter(fileWriter);
-			jsonWriter.setIndent("    ");
-			jsonWriter.beginArray();
-			{
-				for (Map.Entry<String, Long> modPixels : sortedEntries) {
-					String resourceDomain = modPixels.getKey();
-
-					long pixelCount = modPixels.getValue();
-					IModInfo metadata = getModMetadata(resourceDomain);
-					Map<String, Object> modConfig = metadata.getModProperties();
-
-					jsonWriter.beginObject()
-						.name("resourceDomain").value(resourceDomain)
-						.name("pixelCount").value(pixelCount)
-						.name("percentOfTextureMap").value(pixelCount * 100f / totalPixels)
-						.name("modName").value(metadata.getDisplayName())
-						.name("url").value(getModConfigValue(modConfig, "displayURL"))
-						.name("issueTrackerUrl").value(getModConfigValue(modConfig, "issueTrackerURL"));
-
-					jsonWriter.name("authors").beginArray();
-					{
-						String authors = getModConfigValue(modConfig, "authors");
-						if (!authors.isEmpty()) {
-							String[] authorList = authors.split(",");
-							for (String author : authorList) {
-								jsonWriter.value(author.trim());
-							}
-						}
-					}
-					jsonWriter.endArray();
-
-					jsonWriter.endObject();
-				}
-
+		FileWriter fileWriter = new FileWriter(output);
+		fileWriter.write("var modStatistics = \n//Start of Data\n");
+		JsonWriter jsonWriter = new JsonWriter(fileWriter);
+		jsonWriter.setIndent("    ");
+		jsonWriter.beginArray();
+		{
+			for (Map.Entry<String, Long> modPixels : sortedEntries) {
+				String resourceDomain = modPixels.getKey();
+				long pixelCount = modPixels.getValue();
+				writeModStatisticsObject(jsonWriter, resourceDomain, pixelCount, totalPixels);
 			}
-			jsonWriter.endArray();
-			jsonWriter.close();
-			fileWriter.close();
-
-			Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
-		} catch (IOException e) {
-			Log.error("Failed to save mod statistics info.", e);
 		}
+		jsonWriter.endArray();
+		jsonWriter.close();
+		fileWriter.close();
+
+		Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
+		return output;
 	}
 
-	private static String getModConfigValue(Map<String, Object> modConfig, String key) {
-		return (String)modConfig.getOrDefault(key, "");
+	private static void writeModStatisticsObject(JsonWriter jsonWriter, String resourceDomain, long pixelCount, long totalPixels) throws IOException {
+		IModInfo modInfo = getModMetadata(resourceDomain);
+		String modName = modInfo != null ? modInfo.getDisplayName() : "";
+
+		jsonWriter.beginObject()
+				.name("resourceDomain").value(resourceDomain)
+				.name("pixelCount").value(pixelCount)
+				.name("percentOfTextureMap").value(pixelCount * 100f / totalPixels)
+				.name("modName").value(modName)
+				.name("url").value(getModConfigValue(modInfo, "displayURL"))
+				.name("issueTrackerUrl").value(getModConfigValue(modInfo, "issueTrackerURL"));
+
+		jsonWriter.name("authors").beginArray();
+		{
+			String authors = getModConfigValue(modInfo, "authors");
+			if (!authors.isEmpty()) {
+				String[] authorList = authors.split(",");
+				for (String author : authorList) {
+					jsonWriter.value(author.trim());
+				}
+			}
+		}
+		jsonWriter.endArray();
+
+		jsonWriter.endObject();
 	}
 
-	private IModInfo getModMetadata(String resourceDomain) {
+	private static String getModConfigValue(@Nullable IModInfo modInfo, String key) {
+		if (modInfo == null) {
+			return "";
+		}
+		Map<String, Object> modConfig = modInfo.getModProperties();
+		Object value = modConfig.getOrDefault(key, "");
+		if (value instanceof String) {
+			return (String) value;
+		}
+		return "";
+	}
+
+	@Nullable
+	private static IModInfo getModMetadata(String resourceDomain) {
 		ModList modList = ModList.get();
 		List<ModInfo> mods = modList.getMods();
-		ModInfo mod = mods.stream()
+		return mods.stream()
 			.filter(m -> m.getModId().equals(resourceDomain))
 			.findFirst()
 			.orElse(null);
-		if (mod == null) {
-			throw new IllegalArgumentException();
-		} else {
-			return mod;
-		}
 	}
 }

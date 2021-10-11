@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.StartupMessageManager;
@@ -15,7 +17,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 public class TextureImageDumper {
-	public static int saveGlTexture(String name, int textureId, File outputFolder) {
+	public static List<File> saveGlTextures(String name, int textureId, File texturesDir) throws IOException {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
 		GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -28,17 +30,18 @@ public class TextureImageDumper {
 		int mipmapLevels = MathHelper.log2(minimumSize);
 
 		StartupMessageManager.addModMessage("Dumping TextureMap to file");
-		for (int level = 0; level <= mipmapLevels; level++) {
+		List<File> textureFiles = new ArrayList<>();
+		for (int level = 0; level < mipmapLevels; level++) {
 			int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
 			int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
 			int size = width * height;
 
-			if (width == 0 || height == 0) return level - 1;
+			if (width == 0 || height == 0) {
+				return textureFiles;
+			}
 
 			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
-			String fileName = name + "_mipmap_" + level + ".png";
-
-			File output = new File(outputFolder, fileName);
+			File output = new File(texturesDir, name + "_mipmap_" + level + ".png");
 			IntBuffer buffer = BufferUtils.createIntBuffer(size);
 			int[] data = new int[size];
 
@@ -46,13 +49,10 @@ public class TextureImageDumper {
 			buffer.get(data);
 			bufferedimage.setRGB(0, 0, width, height, data, 0, width);
 
-			try {
-				ImageIO.write(bufferedimage, "png", output);
-				Log.info("Exported png to: {}", output.getAbsolutePath());
-			} catch (IOException ioexception) {
-				Log.info("Unable to write: ", ioexception);
-			}
+			ImageIO.write(bufferedimage, "png", output);
+			Log.info("Exported png to: {}", output.getAbsolutePath());
+			textureFiles.add(output);
 		}
-		return mipmapLevels - 1;
+		return textureFiles;
 	}
 }

@@ -1,5 +1,6 @@
 package mezz.texturedump;
 
+import mezz.texturedump.dumpers.ResourceWriter;
 import mezz.texturedump.dumpers.ModStatsDumper;
 import mezz.texturedump.dumpers.TextureImageDumper;
 import mezz.texturedump.dumpers.TextureInfoDumper;
@@ -25,6 +26,8 @@ import net.minecraftforge.resource.ISelectiveResourceReloadListener;
 import net.minecraftforge.resource.VanillaResourceType;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -66,17 +69,6 @@ public class TextureDump {
 	}
 
 	private static void dumpTextureMaps() {
-		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-		for (Map.Entry<ResourceLocation, Texture> entry : textureManager.mapTextureObjects.entrySet()) {
-			Texture textureObject = entry.getValue();
-			if (textureObject instanceof AtlasTexture) {
-				String name = entry.getKey().toString().replace(':', '_').replace('/', '_');
-				dumpTextureMap((AtlasTexture) textureObject, name);
-			}
-		}
-	}
-
-	private static void dumpTextureMap(AtlasTexture map, String name) {
 		File outputFolder = new File("texture_dump");
 		if (!outputFolder.exists()) {
 			if (!outputFolder.mkdir()) {
@@ -85,11 +77,52 @@ public class TextureDump {
 			}
 		}
 
-		int mip = TextureImageDumper.saveGlTexture(name, map.getGlTextureId(), outputFolder);
-		TextureInfoDumper.saveTextureInfo(name, map, mip, outputFolder);
 
-		ModStatsDumper modStatsDumper = new ModStatsDumper();
-		modStatsDumper.saveModStats(name, map, outputFolder);
+		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+
+		try {
+			File mipmapsDir = createSubDirectory(outputFolder, "mipmaps");
+			File resourceDir = createSubDirectory(outputFolder, "resources");
+			File modStatsDir = createSubDirectory(outputFolder, "modStats");
+			File texturesDir = createSubDirectory(outputFolder, "textures");
+			File textureInfoDir = createSubDirectory(outputFolder, "textureInfo");
+			ResourceWriter.writeResources(resourceDir);
+
+			for (Map.Entry<ResourceLocation, Texture> entry : textureManager.mapTextureObjects.entrySet()) {
+				Texture textureObject = entry.getValue();
+				if (textureObject instanceof AtlasTexture) {
+					String name = entry.getKey().toString().replace(':', '_').replace('/', '_');
+					dumpTextureMap((AtlasTexture) textureObject, name, outputFolder, mipmapsDir, resourceDir, modStatsDir, texturesDir, textureInfoDir);
+				}
+			}
+		} catch (IOException e) {
+			Log.error("Failed to dump texture maps.", e);
+		}
 	}
 
+	private static void dumpTextureMap(AtlasTexture map, String name, File outputFolder, File mipmapsDir, File resourceDir, File modStatsDir, File texturesDir, File textureInfoDir) {
+		try {
+			ModStatsDumper modStatsDumper = new ModStatsDumper();
+			File modStatsFile = modStatsDumper.saveModStats(name, map, modStatsDir);
+
+			List<File> textureImageJsFiles = TextureImageDumper.saveGlTextures(name, map.getGlTextureId(), texturesDir);
+			int mipmapLevels = textureImageJsFiles.size();
+			List<File> textureInfoFiles = TextureInfoDumper.saveTextureInfoDataFiles(name, map, mipmapLevels, textureInfoDir);
+
+			ResourceWriter.writeFiles(name, outputFolder, mipmapsDir, textureImageJsFiles, textureInfoFiles, modStatsFile, resourceDir, mipmapLevels);
+		} catch (IOException e) {
+			Log.error(String.format("Failed to dump texture map: %s.", name), e);
+		}
+	}
+
+	public static File createSubDirectory(File outputFolder, String subfolderName) throws IOException {
+		File subfolder = new File(outputFolder, subfolderName);
+		if (!subfolder.exists () && !subfolder.mkdirs()) {
+			throw new IOException(String.format("Unable to create subdirectory: %s", subfolder));
+		}
+		if (!subfolder.isDirectory()) {
+			throw new IOException(String.format("Unable to create subdirectory: %s", subfolder));
+		}
+		return subfolder;
+	}
 }
