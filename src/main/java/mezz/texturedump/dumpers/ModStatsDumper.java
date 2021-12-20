@@ -9,9 +9,9 @@ import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class ModStatsDumper {
 
-	public File saveModStats(String name, AtlasTexture map, File modStatsDir) throws IOException {
+	public Path saveModStats(String name, AtlasTexture map, Path modStatsDir) throws IOException {
 		Map<String, Long> modPixelCounts = map.mapUploadedSprites.values().stream()
 				.collect(Collectors.groupingBy(
 						sprite -> sprite.getName().getNamespace(),
@@ -29,14 +29,14 @@ public class ModStatsDumper {
 		final long totalPixels = modPixelCounts.values().stream().mapToLong(longValue -> longValue).sum();
 
 		final String filename = name + "_mod_statistics";
-		File output = new File(modStatsDir, filename + ".js");
+		Path output = modStatsDir.resolve(filename + ".js");
 
 		List<Map.Entry<String, Long>> sortedEntries = modPixelCounts.entrySet().stream()
 				.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
 				.collect(Collectors.toList());
 
 		StartupMessageManager.addModMessage("Dumping Mod TextureMap Statistics");
-		FileWriter fileWriter = new FileWriter(output);
+		FileWriter fileWriter = new FileWriter(output.toFile());
 		fileWriter.write("var modStatistics = \n//Start of Data\n");
 		JsonWriter jsonWriter = new JsonWriter(fileWriter);
 		jsonWriter.setIndent("    ");
@@ -52,7 +52,7 @@ public class ModStatsDumper {
 		jsonWriter.close();
 		fileWriter.close();
 
-		Log.info("Saved mod statistics to {}.", output.getAbsoluteFile());
+		Log.info("Saved mod statistics to {}.", output.toString());
 		return output;
 	}
 

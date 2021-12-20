@@ -13,7 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = version_major + '.' + version_minor
+version = version_major + '.' + version_minor + '.' + version_patch
 group= "mezz.texturedump"
 archivesBaseName = "texturedump_" + mcversion
 

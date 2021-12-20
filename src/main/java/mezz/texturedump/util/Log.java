@@ -1,6 +1,6 @@
 package mezz.texturedump.util;
 
-import mezz.texturedump.TextureDump;
+import mezz.texturedump.Constants;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
@@ -27,6 +27,6 @@ public class Log {
 	}
 
 	private static void log(Level logLevel, String message, Object... params) {
-		LogManager.getLogger(TextureDump.MOD_ID).log(logLevel, message, params);
+		LogManager.getLogger(Constants.MOD_ID).log(logLevel, message, params);
 	}
 }

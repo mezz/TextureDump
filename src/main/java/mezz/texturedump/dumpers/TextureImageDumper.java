@@ -2,9 +2,9 @@ package mezz.texturedump.dumpers;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +17,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 public class TextureImageDumper {
-	public static List<File> saveGlTextures(String name, int textureId, File texturesDir) throws IOException {
+	public static List<Path> saveGlTextures(String name, int textureId, Path texturesDir) throws IOException {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
 		GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
@@ -30,7 +30,7 @@ public class TextureImageDumper {
 		int mipmapLevels = MathHelper.log2(minimumSize);
 
 		StartupMessageManager.addModMessage("Dumping TextureMap to file");
-		List<File> textureFiles = new ArrayList<>();
+		List<Path> textureFiles = new ArrayList<>();
 		for (int level = 0; level < mipmapLevels; level++) {
 			int width = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);
 			int height = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
@@ -41,7 +41,7 @@ public class TextureImageDumper {
 			}
 
 			BufferedImage bufferedimage = new BufferedImage(width, height, 2);
-			File output = new File(texturesDir, name + "_mipmap_" + level + ".png");
+			Path output = texturesDir.resolve(name + "_mipmap_" + level + ".png");
 			IntBuffer buffer = BufferUtils.createIntBuffer(size);
 			int[] data = new int[size];
 
@@ -49,8 +49,8 @@ public class TextureImageDumper {
 			buffer.get(data);
 			bufferedimage.setRGB(0, 0, width, height, data, 0, width);
 
-			ImageIO.write(bufferedimage, "png", output);
-			Log.info("Exported png to: {}", output.getAbsolutePath());
+			ImageIO.write(bufferedimage, "png", output.toFile());
+			Log.info("Exported png to: {}", output.toString());
 			textureFiles.add(output);
 		}
 		return textureFiles;
