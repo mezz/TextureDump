@@ -96,7 +96,6 @@ function initialize() {
 
     resourceDomainsElement.appendChild(document.createElement("option"));
     for(var resourceDomain in mods){
-        console.log(resourceDomain + ': ' + mods[resourceDomain].modName);
         var newOption = document.createElement("option");
         newOption.value = resourceDomain;
         newOption.innerHTML = mods[resourceDomain].modName

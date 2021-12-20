@@ -25,8 +25,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -54,7 +56,11 @@ public class TextureDump {
 		modEventBus.addListener(EventPriority.NORMAL, false, RegisterClientReloadListenersEvent.class, registerReloadListenerEvent -> {
 			registerReloadListenerEvent.registerReloadListener((ResourceManagerReloadListener) (resourceManager) -> {
 				if (titleScreenOpened) { // only reload when the player requests it in-game
-					dumpTextureMaps();
+					try {
+						dumpTextureMaps();
+					} catch (IOException e) {
+						LOGGER.error("Failed to dump texture maps with error.", e);
+					}
 				}
 			});
 		});
@@ -63,28 +69,26 @@ public class TextureDump {
 	private void onMainMenuOpen(GuiOpenEvent event) {
 		if (!titleScreenOpened && event.getGui() instanceof TitleScreen) {
 			titleScreenOpened = true;
-			dumpTextureMaps();
+			try {
+				dumpTextureMaps();
+			} catch (IOException e) {
+				LOGGER.error("Failed to dump texture maps with error.", e);
+			}
 		}
 	}
 
-	private static void dumpTextureMaps() {
-		File outputFolder = new File("texture_dump");
-		if (!outputFolder.exists()) {
-			if (!outputFolder.mkdir()) {
-				LOGGER.error("Failed to create directory " + outputFolder);
-				return;
-			}
-		}
-
+	private static void dumpTextureMaps() throws IOException {
+		Path outputFolder = Paths.get("texture_dump");
+		outputFolder = Files.createDirectories(outputFolder);
 
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
 		try {
-			File mipmapsDir = createSubDirectory(outputFolder, "mipmaps");
-			File resourceDir = createSubDirectory(outputFolder, "resources");
-			File modStatsDir = createSubDirectory(outputFolder, "modStats");
-			File texturesDir = createSubDirectory(outputFolder, "textures");
-			File textureInfoDir = createSubDirectory(outputFolder, "textureInfo");
+			Path mipmapsDir = createSubDirectory(outputFolder, "mipmaps");
+			Path resourceDir = createSubDirectory(outputFolder, "resources");
+			Path modStatsDir = createSubDirectory(outputFolder, "modStats");
+			Path texturesDir = createSubDirectory(outputFolder, "textures");
+			Path textureInfoDir = createSubDirectory(outputFolder, "textureInfo");
 			ResourceWriter.writeResources(resourceDir);
 
 			for (Map.Entry<ResourceLocation, AbstractTexture> entry : textureManager.byPath.entrySet()) {
@@ -99,14 +103,14 @@ public class TextureDump {
 		}
 	}
 
-	private static void dumpTextureMap(TextureAtlas map, String name, File outputFolder, File mipmapsDir, File resourceDir, File modStatsDir, File texturesDir, File textureInfoDir) {
+	private static void dumpTextureMap(TextureAtlas map, String name, Path outputFolder, Path mipmapsDir, Path resourceDir, Path modStatsDir, Path texturesDir, Path textureInfoDir) {
 		try {
 			ModStatsDumper modStatsDumper = new ModStatsDumper();
-			File modStatsFile = modStatsDumper.saveModStats(name, map, modStatsDir);
+			Path modStatsFile = modStatsDumper.saveModStats(name, map, modStatsDir);
 
-			List<File> textureImageJsFiles = TextureImageDumper.saveGlTextures(name, map.getId(), texturesDir);
+			List<Path> textureImageJsFiles = TextureImageDumper.saveGlTextures(name, map.getId(), texturesDir);
 			int mipmapLevels = textureImageJsFiles.size();
-			List<File> textureInfoFiles = TextureInfoDumper.saveTextureInfoDataFiles(name, map, mipmapLevels, textureInfoDir);
+			List<Path> textureInfoFiles = TextureInfoDumper.saveTextureInfoDataFiles(name, map, mipmapLevels, textureInfoDir);
 
 			ResourceWriter.writeFiles(name, outputFolder, mipmapsDir, textureImageJsFiles, textureInfoFiles, modStatsFile, resourceDir, mipmapLevels);
 		} catch (IOException e) {
@@ -114,14 +118,8 @@ public class TextureDump {
 		}
 	}
 
-	public static File createSubDirectory(File outputFolder, String subfolderName) throws IOException {
-		File subfolder = new File(outputFolder, subfolderName);
-		if (!subfolder.exists () && !subfolder.mkdirs()) {
-			throw new IOException(String.format("Unable to create subdirectory: %s", subfolder));
-		}
-		if (!subfolder.isDirectory()) {
-			throw new IOException(String.format("Unable to create subdirectory: %s", subfolder));
-		}
-		return subfolder;
+	public static Path createSubDirectory(Path outputFolder, String subfolderName) throws IOException {
+		Path subfolder = outputFolder.resolve(subfolderName);
+		return Files.createDirectories(subfolder);
 	}
 }

@@ -10,9 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ModStatsDumper {
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public File saveModStats(String name, TextureAtlas map, File modStatsDir) throws IOException {
+	public Path saveModStats(String name, TextureAtlas map, Path modStatsDir) throws IOException {
 		Map<String, Long> modPixelCounts = map.texturesByName.values().stream()
 				.collect(Collectors.groupingBy(
 						sprite -> sprite.getName().getNamespace(),
@@ -31,14 +31,14 @@ public class ModStatsDumper {
 		final long totalPixels = modPixelCounts.values().stream().mapToLong(longValue -> longValue).sum();
 
 		final String filename = name + "_mod_statistics";
-		File output = new File(modStatsDir, filename + ".js");
+		Path output = modStatsDir.resolve(filename + ".js");
 
 		List<Map.Entry<String, Long>> sortedEntries = modPixelCounts.entrySet().stream()
 				.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
 				.collect(Collectors.toList());
 
 		StartupMessageManager.addModMessage("Dumping Mod TextureMap Statistics");
-		FileWriter fileWriter = new FileWriter(output);
+		FileWriter fileWriter = new FileWriter(output.toFile());
 		fileWriter.write("var modStatistics = \n//Start of Data\n");
 		JsonWriter jsonWriter = new JsonWriter(fileWriter);
 		jsonWriter.setIndent("    ");
@@ -54,7 +54,7 @@ public class ModStatsDumper {
 		jsonWriter.close();
 		fileWriter.close();
 
-		LOGGER.info("Saved mod statistics to {}.", output.getAbsoluteFile());
+		LOGGER.info("Saved mod statistics to {}.", output.toString());
 		return output;
 	}
 

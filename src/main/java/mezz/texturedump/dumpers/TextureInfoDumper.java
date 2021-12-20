@@ -6,22 +6,22 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.StartupMessageManager;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class TextureInfoDumper {
-	public static List<File> saveTextureInfoDataFiles(String name, TextureAtlas map, int mipmapLevels, File outputFolder) throws IOException {
+	public static List<Path> saveTextureInfoDataFiles(String name, TextureAtlas map, int mipmapLevels, Path outputFolder) throws IOException {
 		StartupMessageManager.addModMessage("Dumping TextureMap info to file");
 
-		List<File> dataFiles = new ArrayList<>();
+		List<Path> dataFiles = new ArrayList<>();
 		for (int level = 0; level < mipmapLevels; level++) {
 			final String filename = name + "_mipmap_" + level;
-			File dataFile = new File(outputFolder, filename + ".js");
+			Path dataFile = outputFolder.resolve(filename + ".js");
 
 			StringWriter out = new StringWriter();
 			JsonWriter jsonWriter = new JsonWriter(out);
@@ -50,7 +50,7 @@ public class TextureInfoDumper {
 			out.close();
 
 			FileWriter fileWriter;
-			fileWriter = new FileWriter(dataFile);
+			fileWriter = new FileWriter(dataFile.toFile());
 			fileWriter.write("var textureData = \n//Start of Data\n" + out);
 			fileWriter.close();
 
