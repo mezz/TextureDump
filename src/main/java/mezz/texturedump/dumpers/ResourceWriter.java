@@ -64,8 +64,8 @@ public class ResourceWriter {
         writeFileFromResource(resourceDir, "texturedump.css");
         writeFileFromResource(resourceDir, "texturedump.backgrounds.css");
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, "bg.png"));
-        final InputStream inputStream = resource.getInputStream();
+        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, "bg.png")).get();
+        final InputStream inputStream = resource.open();
         final OutputStream outputStream = Files.newOutputStream(resourceDir.resolve("bg.png"));
         IOUtils.copy(inputStream, outputStream);
     }
@@ -78,8 +78,8 @@ public class ResourceWriter {
 
     private static String getResourceAsString(String resourceName) throws IOException {
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, resourceName));
-        final InputStream inputStream = resource.getInputStream();
+        final Resource resource = resourceManager.getResource(new ResourceLocation(Constants.MOD_ID, resourceName)).get();
+        final InputStream inputStream = resource.open();
         StringWriter writer = new StringWriter();
         IOUtils.copy(inputStream, writer, Charset.defaultCharset());
         String string = writer.toString();
