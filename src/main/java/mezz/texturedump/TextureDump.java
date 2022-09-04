@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.ScreenOpenEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -42,7 +42,7 @@ public class TextureDump {
 		DistExecutor.runWhenOn(Dist.CLIENT, ()->()-> {
 			IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 			addListener(modEventBus, FMLLoadCompleteEvent.class, (event) -> this.onLoadComplete());
-			addListener(MinecraftForge.EVENT_BUS, ScreenOpenEvent.class, this::onMainMenuOpen);
+			addListener(MinecraftForge.EVENT_BUS, ScreenEvent.Opening.class, this::onMainMenuOpen);
 		});
 	}
 
@@ -66,7 +66,7 @@ public class TextureDump {
 		});
 	}
 
-	private void onMainMenuOpen(ScreenOpenEvent event) {
+	private void onMainMenuOpen(ScreenEvent.Opening event) {
 		if (!titleScreenOpened && event.getScreen() instanceof TitleScreen) {
 			titleScreenOpened = true;
 			try {
